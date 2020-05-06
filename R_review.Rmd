@@ -1,0 +1,282 @@
+---
+title: "R review"
+author: "Kevinhuang"
+date: "2020/5/6"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## R的基礎數學運算
+
+```{r }
+a<-20
+b<-2
+
+#加減乘除、次方、取餘數、取商數
+a+b
+a-b
+a*b
+a/b
+a^b
+a%%b # 餘數
+a%/%b # 商數
+
+#取log、指數、絕對值、開根號
+log(a)
+log(b,base=10)
+exp(b)
+abs(b-a)
+sqrt(b)
+
+#特殊值
+e
+pi
+
+#約略值(四捨五入、無條件進位、無條件捨去)
+c<-49883.2233
+round(c,digits=2) #可以決定進位到哪位
+signif(c) #四捨五入
+ceiling(c) #無條件進位
+floor(c) #無條件捨去
+```
+
+
+## R的資料格式
+
+(1)資料型態：Doubles(浮點數)、Integer(整數)、character(文字)、logical(邏輯T/F)、complex(複數)、factor(因子)
+
+```{r pressure, echo=T}
+a<-c(1,2,3)
+b<-c(1L,2L,3L)
+c<-c('how','are','you')
+d<-(4>3)&(5==3)
+e<-c(1+1i,1+2i,1+3i)
+f<-factor(c,labels = c('one','two','three'))#按照第一個字母排序 #可用label調整效果的名稱
+levels(f)
+
+#轉換資料類型
+as.integer(a)
+as.character(b)
+as.double(a)
+
+#判斷資料類型
+is.character(c)
+is.integer(b)
+is.numeric(a)
+
+#檢視是什麼樣的資料
+typeof(a)
+```
+
+(2)資料結構：vector、matrix、list、dataframe
+
+-vector(適合數值、文字的資料)
+以「c()且用逗號分隔」的方式存取資料。
+
+**數值向量**
+```{r, echo=T}
+n1<-c(1:10)
+n2<-seq(1, 5, by = 0.5) #每固定間距來產生新資料
+n3<-seq(1, 10, length.out = 4) #產生一個等距的新資料
+n4<-rep(3, 12) 
+n5<-rep(c(2,20,12,6,3), 2)
+
+#向量合併
+c(n1,n3)
+
+#取向量的值(註：第一個值為1,而非為0)
+n1[1]
+n2[2:5]
+n2[c(2:5)]
+n3[-c(2:4)]#由負號取剩下的位置
+
+
+#改變向量的值
+n1[2]<-5
+n2[2:4]<-rep(3,3)
+n3[4]<-'h'  #特別注意：當把值改成字串，其他數值也會變成字串
+
+#整理向量的值
+sort(n5) #直接排序
+order(n5) #回傳排序的位置
+n5[order(n5)]
+sort(n5,decreasing = T)#改為由大到小
+order(n5,decreasing = T) 
+n5[order(n5,decreasing = T)]
+which(n1==5)#找特定值的位置
+grep(5,n1)
+
+#向量相乘
+n1+1
+n1*3
+n1*c(2,3) #以c(2,3)複製符合n1的長度
+
+#向量資訊
+length(n1) #長度
+sum(n1) #總合
+unique(n5) #獨特值
+table(n5) #每個獨特值的個數
+```
+
+**字串向量**
+```{r , echo=T}
+TEXT1 <- "You're so great !"
+TEXT2 <- c('yellow','red','white','orange')
+
+#切割文字
+strsplit(TEXT1, " ") #以「空白」來切割字串
+
+#英文大小寫
+toupper(TEXT1)
+tolower(TEXT1)
+
+#文字搜尋跟更正
+substr(TEXT1,1,4) #取部分字串
+grep("w", TEXT2) #取得有特定字的位置
+gsub("o","0",TEXT1) #修改文字
+
+#將字串連起來
+paste(TEXT2,'++') #向量內的每個值加上「++」
+paste(TEXT2,collapse =' ~ ') # 以「~」來連接向量內的每個值
+cat(TEXT1,TEXT2) #跟paste比較，沒有「引號」
+
+#字串的順序(依照英文字母)
+sort(TEXT2)
+```
+
+正規表示式 (Regular Expression)
+語法	正則表達式	範例
+整數	[0-9]+	5815
+浮點數	[0-9]+.[0-9]+	58.15
+純英文字串	[A-Za-z]+	CGUIM
+
+
+-matrix (適合處理全部都是數值的資料)
+以「n行、m列」的結構來儲存資料。
+
+
+```{r, echo=T}
+A <- matrix(c(60,80,70,79),2,2)
+B <- matrix(c(1:4),2,2,byrow = T) #可以調整放入資料的方式，以「row或column」依序存入
+C <- rbind(c(4,6),c(8,2)) #以row的方式來合併多筆資料
+D <- cbind(c(9,10,74),c(22,40,66)) #以column的方式來合併多筆資料
+
+#行的名稱、列的名稱
+colnames(A)<-c('math','chinese')
+rownames(A)<-c('marry','john')
+
+#查看矩陣的資訊
+dim(D) # row,column
+A[2,]#看第二row
+A['john',] #也可以用名稱
+
+#修改資料(不適合改成factor,因為不能處理，也不適合字串，只要任一直轉字串，就會整個改變)
+A[2,1]<-10000
+A[2,]<-c(2,3)
+
+#矩陣的運算
+diag(A)
+det(A)
+A%*%B #內積
+t(A)#transpose
+solve(A)#得到inverse
+eigen(A) #用list存取資料
+eigen(A)$values
+eigen(A)$vectors
+```
+
+
+-list(適合存取不同屬性的資料)
+
+```{r, echo=T}
+#假設一組學生資料
+info<-list(Students=c("kevin","oliver","Emma","Amy"),Year=2014,
+                 Score=c(88,50,30,77),School=c("ncku",'NTU'))
+#查看list資料
+info$Students #所有學生名字
+info[3] #得到所有分數
+info[[4]][1] #取得ncku
+
+#增加新資料
+info$height<-c(177,166,180,160)
+
+#改資料
+info$year<-2016
+```
+
+
+-dataframe(適合存取外部資料，像是csv、txt)
+必須等長
+
+```{r, echo=T}
+#會自動將字串資料轉成factor，可以用「stringsAsFactors = FALSE」調整
+info<-data.frame(Students=c("kevin","oliver","Emma","Amy"),Year=c(2014,2015,2019,2020),
+                 Score=c(88,50,30,77),School=c("ncku",'NTU','NTU','ncku'),stringsAsFactors = FALSE)
+
+#看資料的資訊
+head(info,2)
+str(info)
+View(info)
+colnames(info)
+summary(info)
+
+#查看以及修改資料
+info$Students
+info[1,]#跟矩陣一樣
+info$Score[2]<-66
+info$School<-factor(info$School)
+info$age<-c(22,23,24,20)
+```
+
+
+## R的迴圈(for/while)、if/else
+
+以例子來說明迴圈與條件：
+1.	想像我們以原點（0,0）為原心畫一個半徑為1的圓形，此面積應該是Pi。
+2.	畫一個包含圓形完全在正方形內。連接（-1,-1）,(1,-1),(1,1),(-1,1)四個點，會形成一個正方形，假設面積是A。
+3.	想像在方形範圍內，隨機發射飛鏢，那麼，掉在圓內的機率是Pi/A。
+4.	丟一堆飛鏢，估計出 Pi/A，乘上A就可以估計出 Pi。
+5.	我們試著丟10000次看看，求出Pi。
+
+```{r, echo=T}
+count<-0
+for (i in 1:10000){
+  x<-runif(1,-1,1)
+  y<-runif(1,-1,1)
+  if(x^2+y^2<1){
+    count<-count+1
+  }
+}                 
+count/10000*(2*2)
+```
+
+
+## R的function以及module
+
+
+透過「install.packages('XXX')」來安裝新模組
+
+
+## 資料處理示範
+```{r, echo=T}
+
+```
+
+
+## R的統計
+
+```{r, echo=T}
+
+
+```
+
+
+## R的畫圖
+
+```{r, echo=T}
+
+```
