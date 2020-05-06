@@ -10,13 +10,14 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-## R的基礎數學運算
+# R的基礎數學運算
 
-```{r }
+___
+
+> **加減乘除、次方、取餘數、取商數**
+```{r eval=FALSE}
 a<-20
 b<-2
-
-#加減乘除、次方、取餘數、取商數
 a+b
 a-b
 a*b
@@ -24,19 +25,23 @@ a/b
 a^b
 a%%b # 餘數
 a%/%b # 商數
+```
 
-#取log、指數、絕對值、開根號
+> **取log、指數、絕對值、開根號**
+```{r eval=FALSE}
 log(a)
 log(b,base=10)
 exp(b)
 abs(b-a)
 sqrt(b)
+```
 
+> **特殊值(e跟$pi$)、約略值(四捨五入、無條件進位、無條件捨去)**
+```{r eval=FALSE}
 #特殊值
-e
+exp(1)
 pi
-
-#約略值(四捨五入、無條件進位、無條件捨去)
+#約略值
 c<-49883.2233
 round(c,digits=2) #可以決定進位到哪位
 signif(c) #四捨五入
@@ -45,11 +50,15 @@ floor(c) #無條件捨去
 ```
 
 
-## R的資料格式
+___
 
-(1)資料型態：Doubles(浮點數)、Integer(整數)、character(文字)、logical(邏輯T/F)、complex(複數)、factor(因子)
+# R的資料格式
 
-```{r pressure, echo=T}
+___
+
+### **資料型態 ：Doubles(浮點數)、Integer(整數)、character(文字)、logical(邏輯T/F)、complex(複數)、factor(因子)**
+
+```{r eval=FALSE}
 a<-c(1,2,3)
 b<-c(1L,2L,3L)
 c<-c('how','are','you')
@@ -72,13 +81,14 @@ is.numeric(a)
 typeof(a)
 ```
 
-(2)資料結構：vector、matrix、list、dataframe
+### **資料結構 ：vector、matrix、list、dataframe**
 
--vector(適合數值、文字的資料)
+> vector(適合數值、文字的資料)
+
 以「c()且用逗號分隔」的方式存取資料。
 
-**數值向量**
-```{r, echo=T}
++ 數值向量
+```{r eval=FALSE}
 n1<-c(1:10)
 n2<-seq(1, 5, by = 0.5) #每固定間距來產生新資料
 n3<-seq(1, 10, length.out = 4) #產生一個等距的新資料
@@ -122,8 +132,8 @@ unique(n5) #獨特值
 table(n5) #每個獨特值的個數
 ```
 
-**字串向量**
-```{r , echo=T}
++ 字串向量
+```{r eval=FALSE}
 TEXT1 <- "You're so great !"
 TEXT2 <- c('yellow','red','white','orange')
 
@@ -148,18 +158,13 @@ cat(TEXT1,TEXT2) #跟paste比較，沒有「引號」
 sort(TEXT2)
 ```
 
-正規表示式 (Regular Expression)
-語法	正則表達式	範例
-整數	[0-9]+	5815
-浮點數	[0-9]+.[0-9]+	58.15
-純英文字串	[A-Za-z]+	CGUIM
 
-
--matrix (適合處理全部都是數值的資料)
+> matrix (適合處理全部都是數值的資料)
+ 
 以「n行、m列」的結構來儲存資料。
 
 
-```{r, echo=T}
+```{r eval=FALSE}
 A <- matrix(c(60,80,70,79),2,2)
 B <- matrix(c(1:4),2,2,byrow = T) #可以調整放入資料的方式，以「row或column」依序存入
 C <- rbind(c(4,6),c(8,2)) #以row的方式來合併多筆資料
@@ -190,9 +195,11 @@ eigen(A)$vectors
 ```
 
 
--list(適合存取不同屬性的資料)
+> list(適合存取不同屬性的資料)
+ 
+以網狀結構存取不同資料，特色為存取不同類型、長度的資料。
 
-```{r, echo=T}
+```{r eval=FALSE}
 #假設一組學生資料
 info<-list(Students=c("kevin","oliver","Emma","Amy"),Year=2014,
                  Score=c(88,50,30,77),School=c("ncku",'NTU'))
@@ -209,10 +216,10 @@ info$year<-2016
 ```
 
 
--dataframe(適合存取外部資料，像是csv、txt)
-必須等長
+> dataframe(適合存取外部資料，像是csv、txt)
+ 
 
-```{r, echo=T}
+```{r, eval=FALSE}
 #會自動將字串資料轉成factor，可以用「stringsAsFactors = FALSE」調整
 info<-data.frame(Students=c("kevin","oliver","Emma","Amy"),Year=c(2014,2015,2019,2020),
                  Score=c(88,50,30,77),School=c("ncku",'NTU','NTU','ncku'),stringsAsFactors = FALSE)
@@ -232,17 +239,25 @@ info$School<-factor(info$School)
 info$age<-c(22,23,24,20)
 ```
 
+___
 
-## R的迴圈(for/while)、if/else
+# R的迴圈(for/while)、if/else
+
+___
 
 以例子來說明迴圈與條件：
-1.	想像我們以原點（0,0）為原心畫一個半徑為1的圓形，此面積應該是Pi。
-2.	畫一個包含圓形完全在正方形內。連接（-1,-1）,(1,-1),(1,1),(-1,1)四個點，會形成一個正方形，假設面積是A。
-3.	想像在方形範圍內，隨機發射飛鏢，那麼，掉在圓內的機率是Pi/A。
-4.	丟一堆飛鏢，估計出 Pi/A，乘上A就可以估計出 Pi。
-5.	我們試著丟10000次看看，求出Pi。
 
-```{r, echo=T}
+1. 想像我們以原點（0,0）為原心畫一個半徑為1的圓形，此面積應該是Pi。
+
+2. 畫一個包含圓形完全在正方形內。連接（-1,-1）,(1,-1),(1,1),(-1,1)四個點，會形成一個正方形，假設面積是A。
+
+3. 想像在方形範圍內，隨機發射飛鏢，那麼，掉在圓內的機率是Pi/A。
+
+4. 丟一堆飛鏢，估計出 Pi/A，乘上A就可以估計出 Pi。
+
+5. 我們試著丟10000次看看，求出Pi。
+
+```{r,eval=FALSE}
 count<-0
 for (i in 1:10000){
   x<-runif(1,-1,1)
@@ -253,29 +268,79 @@ for (i in 1:10000){
 }                 
 count/10000*(2*2)
 ```
+___
 
+# R的function以及module
 
-## R的function以及module
+___
 
+> R語言有許多內建的好用module，像是統計工具、apply家族。
 
-透過「install.packages('XXX')」來安裝新模組
+以介紹「apply家族」來舉例。
+可以得到用迴圈的效果，卻可以節省很多處理時間，適合大筆資料處理
 
+```{r, eval=FALSE}
+data1<-matrix(1:30,6,5)
+#data2為六筆文具價格表
+data2<-data.frame(item=c('pen','pencil','ruler','pen','pencil','ruler'),price=c(10,20,30,25,40,30)) 
 
-## 資料處理示範
+#apply >> 針對矩陣的資料類型，可以對每row或column套用特別函數
+apply(data1,1,sum) #針對row
+apply(data1,2,function(a)sum(a^2)) #針對column
+
+#tapply >> 針對資料的特定column，以另一個column來分類
+tapply(data2$price,data2$item,mean) #算每種文具的平均價
+```
+
+> 透過「install.packages('XXX')」來安裝新模組，並每次需要該module時，可以用library()來呼叫特定module。
+
+以介紹「magrittr」來舉例。
+主要是為了讓複雜的code，可以更清楚表達，不用重新設變數，通常以「%>%」呈現
+
+```{r, eval=FALSE}
+library(magrittr)
+#用data2來示範，算所有文具的平均價格
+data2 %>% .[,2] %>% mean #「.」表示上一部的變數
+
+#用iris的資料來做迴歸
+iris %<>% lm(Sepal.Length ~ Sepal.Width, data = .)%>%summary #「%<>%」將處理完的變數存回iris變數
+```
+
+>當然，你也可以自己創造屬於自己的工具，此功能為「function」，可以將多個功能合併成一個，或是自己創造一個新方法，達到減少寫重複的code。 
+
+建立一個人名名單，對每個人說HI，並最後加上「LOVE&PEACE」
+```{r, echo=T}
+name<-c('kevin','steve','karen')
+hello<-function(x){
+  for(y in 1:3){
+    x[y]<-(paste('Hi~',x[y]))}
+  return(c(x,'LOVE&PEACE'))
+  }
+hello(name)
+```
+
+___
+
+# 資料處理示範
 ```{r, echo=T}
 
 ```
 
+___
 
-## R的統計
+# R的統計
+
+___
 
 ```{r, echo=T}
 
-
 ```
 
+___
 
-## R的畫圖
+# R的畫圖
+
+___
 
 ```{r, echo=T}
 
