@@ -321,19 +321,27 @@ hello(name)
 
 ___
 
-# 資料處理示範
-```{r, echo=T}
 
-```
-
-___
-
-# R的統計
+# 資料處理
 
 ___
 
 ```{r, echo=T}
+titanic<-read.csv('titanic.csv',header = T,stringsAsFactors = F) #讀檔自動把字串改為factor
 
+#查看資料
+head(titanic,3)
+tail(titanic,3)
+str(titanic)
+View(titanic)
+
+#處理遺失值
+titanic[titanic==""]<-NA #將空字串改成NA
+apply(titanic,2,function(x)sum(is.na(x)))#每一column的遺失值
+subset(titanic,select = -Cabin)#刪除很多遺失值的column
+#法1 取出有完整資料的data
+sum(complete.cases(titanic))
+#
 ```
 
 ___
