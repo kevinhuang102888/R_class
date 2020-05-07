@@ -654,12 +654,54 @@ hello(name)</code></pre>
 <hr />
 </div>
 <div id="section" class="section level1">
-<h1>資料處理示範</h1>
+<h1>資料讀取示範</h1>
+<hr />
+<pre class="r"><code>titanic&lt;-read.csv(&#39;titanic.csv&#39;,header = T,stringsAsFactors = F) #讀檔自動把字串改為factor
+
+#查看資料
+head(titanic,3)
+tail(titanic,3)
+str(titanic)
+View(titanic)
+
+#處理遺失值
+titanic[titanic==&quot;&quot;]&lt;-NA #將空字串改成NA
+apply(titanic,2,function(x)sum(is.na(x)))#每一column的遺失值
+subset(titanic,select = -Cabin)#刪除很多遺失值的column
+
+#選擇想要的column
+data_NEW&lt;-subset(titanic,select = -c(Cabin,PassengerId,Ticket))
+
+#取出有完整資料
+titanic2&lt;-titanic[complete.cases(data_NEW),]
+
+#取特定範圍的資料(例：年紀大於20)
+subset(titanic,Age&gt;20)
+
+#將資料做分組
+cut(titanic$Age,3,label=c(&#39;年輕&#39;,&#39;壯年&#39;,&#39;老人&#39;))</code></pre>
 <hr />
 </div>
 <div id="r-2" class="section level1">
-<h1>R的統計</h1>
+<h1>R的統計分析</h1>
 <hr />
+<pre class="r"><code>#用titanic來舉例,年齡的平均數、標準差
+mean(titanic$Age,na.rm = T)#去除NA值
+sd(titanic$Age,na.rm = T)
+summary(titanic$Age)
+
+#用ANOVA檢定「男女購買票價是否有差異」&gt;&gt;答案是有
+titanic2$Sex&lt;-factor(titanic2$Sex)
+find&lt;-lm(titanic2$Fare~titanic2$Sex)
+anova(find)
+
+#用t來檢定「男女購買票價是否有差異」&gt;&gt;答案是有
+female&lt;-titanic2[titanic2$Sex==&#39;female&#39;,]
+male&lt;-titanic2[titanic2$Sex==&#39;male&#39;,]
+t.test(female$Fare,male$Fare)
+
+#算年齡跟票價的線性回歸&gt;&gt;b1效果顯著
+summary(lm(titanic2$Fare~titanic2$Age))</code></pre>
 <hr />
 </div>
 <div id="r-3" class="section level1">

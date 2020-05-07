@@ -344,7 +344,7 @@ subset(titanic,select = -Cabin)#刪除很多遺失值的column
 data_NEW<-subset(titanic,select = -c(Cabin,PassengerId,Ticket))
 
 #取出有完整資料
-complete.cases(data_NEW)
+titanic2<-titanic[complete.cases(data_NEW),]
 
 #取特定範圍的資料(例：年紀大於20)
 subset(titanic,Age>20)
@@ -359,14 +359,24 @@ ___
 
 ___
 
-```{r, echo=T}
+```{r, eval=FALSE}
 #用titanic來舉例,年齡的平均數、標準差
 mean(titanic$Age,na.rm = T)#去除NA值
 sd(titanic$Age,na.rm = T)
 summary(titanic$Age)
 
-#做anova
+#用ANOVA檢定「男女購買票價是否有差異」>>答案是有
+titanic2$Sex<-factor(titanic2$Sex)
+find<-lm(titanic2$Fare~titanic2$Sex)
+anova(find)
 
+#用t來檢定「男女購買票價是否有差異」>>答案是有
+female<-titanic2[titanic2$Sex=='female',]
+male<-titanic2[titanic2$Sex=='male',]
+t.test(female$Fare,male$Fare)
+
+#算年齡跟票價的線性回歸>>b1效果顯著
+summary(lm(titanic2$Fare~titanic2$Age))
 ```
 
 
