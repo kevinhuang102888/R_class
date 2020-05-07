@@ -344,7 +344,7 @@ subset(titanic,select = -Cabin)#刪除很多遺失值的column
 data_NEW<-subset(titanic,select = -c(Cabin,PassengerId,Ticket))
 
 #取出有完整資料
-titanic2<-titanic[complete.cases(data_NEW),]
+titanic[complete.cases(data_NEW),]
 
 #取特定範圍的資料(例：年紀大於20)
 subset(titanic,Age>20)
@@ -366,6 +366,7 @@ sd(titanic$Age,na.rm = T)
 summary(titanic$Age)
 
 #用ANOVA檢定「男女購買票價是否有差異」>>答案是有
+titanic2<-titanic[complete.cases(data_NEW),]
 titanic2$Sex<-factor(titanic2$Sex)
 find<-lm(titanic2$Fare~titanic2$Sex)
 anova(find)
@@ -388,5 +389,40 @@ ___
 ___
 
 ```{r, echo=T}
+titanic<-read.csv('titanic.csv',header = T,stringsAsFactors = F)
+titanic2<-titanic[complete.cases(titanic),]
+#barchart、piechart
+titanic2$Pclass<-factor(titanic2$Pclass,labels=c('頭等','商務','經濟'))
+x<-table(titanic2$Pclass)
+names(x)<-c('頭等','商務','經濟')
+barplot(x,main='各艙等的人數',col=c('#eb6383','#ffe9c5','#b4f2e1'))
+pie(x,col=c('#eb6383','#ffe9c5','#b4f2e1'))
 
+#Histogram、boxplot
+hist(titanic2$Age,col='#f6f578',main='性別',ylab='人的年齡',prob=T)
+boxplot(titanic2$Age~titanic2$Sex,xlab='性別',ylab='人的年齡',col=c('#ffe0ac','#b4f2e1'))
+
+#plot
+plot(titanic2$Age,titanic2$Fare)
+x<-1:50
+y<-2*x+5+rnorm(50,0,10)
+plot(x,y)
 ```
+
+plot(x, y,
+type = "p", ### types of the plot
+pch = , ### the symbol in the plot
+main = NULL, ### the title of the plot
+lty = , ### the style of a line
+lwd = , ### the width of a line
+cex = , ### the size of an text
+bty="o", ### the box around the plot
+col = , ### the color of an object
+xlim = NULL, ylim = NULL, # the range of an axis
+sub = NULL, ### the sub-title of the plot
+xlab = NULL, ylab = NULL, # the name of an axis
+cex.main = ### the size of the title
+)
+
+
+
