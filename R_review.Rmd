@@ -322,11 +322,11 @@ hello(name)
 ___
 
 
-# 資料處理
+# 資料讀取示範
 
 ___
 
-```{r, echo=T}
+```{r, eval=FALSE}
 titanic<-read.csv('titanic.csv',header = T,stringsAsFactors = F) #讀檔自動把字串改為factor
 
 #查看資料
@@ -339,10 +339,37 @@ View(titanic)
 titanic[titanic==""]<-NA #將空字串改成NA
 apply(titanic,2,function(x)sum(is.na(x)))#每一column的遺失值
 subset(titanic,select = -Cabin)#刪除很多遺失值的column
-#法1 取出有完整資料的data
-sum(complete.cases(titanic))
-#
+
+#選擇想要的column
+data_NEW<-subset(titanic,select = -c(Cabin,PassengerId,Ticket))
+
+#取出有完整資料
+complete.cases(data_NEW)
+
+#取特定範圍的資料(例：年紀大於20)
+subset(titanic,Age>20)
+
+#將資料做分組
+cut(titanic$Age,3,label=c('年輕','壯年','老人'))
 ```
+
+___
+
+# R的統計分析
+
+___
+
+```{r, echo=T}
+#用titanic來舉例,年齡的平均數、標準差
+mean(titanic$Age,na.rm = T)#去除NA值
+sd(titanic$Age,na.rm = T)
+summary(titanic$Age)
+
+#做anova
+
+```
+
+
 
 ___
 
