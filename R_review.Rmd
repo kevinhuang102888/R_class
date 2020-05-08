@@ -9,12 +9,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+___
 
-# R的基礎數學運算
+<center><font size="6" font face="Microsoft JhengHei" color=eb6383>R的基礎數學運算</font></center>
 
 ___
 
-> **加減乘除、次方、取餘數、取商數**
+> <font size="3" font face="Microsoft JhengHei"> 加減乘除、次方、取餘數、取商數</font>
 ```{r eval=FALSE}
 a<-20
 b<-2
@@ -27,7 +28,8 @@ a%%b # 餘數
 a%/%b # 商數
 ```
 
-> **取log、指數、絕對值、開根號**
+>  <font size="3" font face="Microsoft JhengHei"> 取log、指數、絕對值、開根號</font>
+
 ```{r eval=FALSE}
 log(a)
 log(b,base=10)
@@ -36,7 +38,8 @@ abs(b-a)
 sqrt(b)
 ```
 
-> **特殊值(e跟$pi$)、約略值(四捨五入、無條件進位、無條件捨去)**
+>  <font size="3" font face="Microsoft JhengHei"> 特殊值(e跟$pi$)、約略值(四捨五入、無條件進位、無條件捨去)</font>
+
 ```{r eval=FALSE}
 #特殊值
 exp(1)
@@ -52,11 +55,12 @@ floor(c) #無條件捨去
 
 ___
 
-# R的資料格式
+<center><font size="6" font face="Microsoft JhengHei" color=eb6383>R的資料格式</font></center>
 
 ___
 
-### **資料型態 ：Doubles(浮點數)、Integer(整數)、character(文字)、logical(邏輯T/F)、complex(複數)、factor(因子)**
+>  <font size="4" font face="Microsoft JhengHei"> 資料型態 ：Doubles(浮點數)、Integer(整數)、character(文字)、logical(邏輯T/F)、complex(複數)、factor(因子)</font>
+
 
 ```{r eval=FALSE}
 a<-c(1,2,3)
@@ -81,9 +85,11 @@ is.numeric(a)
 typeof(a)
 ```
 
-### **資料結構 ：vector、matrix、list、dataframe**
+>  <font size="4" font face="Microsoft JhengHei"> 資料結構 ：vector、matrix、list、dataframe</font>
 
-> vector(適合數值、文字的資料)
+
+<font size="3" font face="Microsoft JhengHei" color=fa9191> vector(適合數值、文字的資料)</font>
+
 
 以「c()且用逗號分隔」的方式存取資料。
 
@@ -159,7 +165,8 @@ sort(TEXT2)
 ```
 
 
-> matrix (適合處理全部都是數值的資料)
+<font size="3" font face="Microsoft JhengHei" color=fa9191> matrix (適合處理全部都是數值的資料)</font>
+
  
 以「n行、m列」的結構來儲存資料。
 
@@ -195,7 +202,7 @@ eigen(A)$vectors
 ```
 
 
-> list(適合存取不同屬性的資料)
+<font size="3" font face="Microsoft JhengHei" color=fa9191> list(適合存取不同屬性的資料)</font>
  
 以網狀結構存取不同資料，特色為存取不同類型、長度的資料。
 
@@ -215,9 +222,8 @@ info$height<-c(177,166,180,160)
 info$year<-2016
 ```
 
+<font size="3" font face="Microsoft JhengHei" color=fa9191> dataframe(適合存取外部資料，像是csv、txt)</font>
 
-> dataframe(適合存取外部資料，像是csv、txt)
- 
 
 ```{r, eval=FALSE}
 #會自動將字串資料轉成factor，可以用「stringsAsFactors = FALSE」調整
@@ -241,7 +247,8 @@ info$age<-c(22,23,24,20)
 
 ___
 
-# R的迴圈(for/while)、if/else
+<center><font size="6" font face="Microsoft JhengHei" color=eb6383>R的迴圈(for/while)、if/else</font></center>
+
 
 ___
 
@@ -270,7 +277,7 @@ count/10000*(2*2)
 ```
 ___
 
-# R的function以及module
+<center><font size="6" font face="Microsoft JhengHei" color=eb6383> R的function以及module</font></center>
 
 ___
 
@@ -322,7 +329,7 @@ hello(name)
 ___
 
 
-# 資料讀取示範
+<center><font size="6" font face="Microsoft JhengHei"color=eb6383> 資料讀取示範</font></center>
 
 ___
 
@@ -355,7 +362,7 @@ cut(titanic$Age,3,label=c('年輕','壯年','老人'))
 
 ___
 
-# R的統計分析
+<center><font size="6" font face="Microsoft JhengHei"color=eb6383> R的統計分析</font></center>
 
 ___
 
@@ -384,7 +391,7 @@ summary(lm(titanic2$Fare~titanic2$Age))
 
 ___
 
-# R的畫圖
+<center><font size="6" font face="Microsoft JhengHei" color=eb6383> R的畫圖</font></center>
 
 ___
 
@@ -410,18 +417,31 @@ plot(x,y)
 ```
 
 plot(x, y,
+
 type = "p", ### types of the plot
+
 pch = , ### the symbol in the plot
+
 main = NULL, ### the title of the plot
+
 lty = , ### the style of a line
+
 lwd = , ### the width of a line
+
 cex = , ### the size of an text
+
 bty="o", ### the box around the plot
+
 col = , ### the color of an object
+
 xlim = NULL, ylim = NULL, # the range of an axis
+
 sub = NULL, ### the sub-title of the plot
+
 xlab = NULL, ylab = NULL, # the name of an axis
+
 cex.main = ### the size of the title
+
 )
 
 
