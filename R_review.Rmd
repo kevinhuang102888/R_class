@@ -281,7 +281,7 @@ ___
 
 ___
 
-> R語言有許多內建的好用module，像是統計工具、apply家族。
+> <font size="3" font face="Microsoft JhengHei" > R語言有許多內建的好用module，像是統計工具、apply家族。</font>
 
 以介紹「apply家族」來舉例。
 可以得到用迴圈的效果，卻可以節省很多處理時間，適合大筆資料處理
@@ -299,7 +299,8 @@ apply(data1,2,function(a)sum(a^2)) #針對column
 tapply(data2$price,data2$item,mean) #算每種文具的平均價
 ```
 
-> 透過「install.packages('XXX')」來安裝新模組，並每次需要該module時，可以用library()來呼叫特定module。
+> <font size="3" font face="Microsoft JhengHei" > 透過「install.packages('XXX')」來安裝新模組，並每次需要該module時，可以用library()來呼叫特定module。</font>
+
 
 以介紹「magrittr」來舉例。
 主要是為了讓複雜的code，可以更清楚表達，不用重新設變數，通常以「%>%」呈現
@@ -313,7 +314,8 @@ data2 %>% .[,2] %>% mean #「.」表示上一部的變數
 iris %<>% lm(Sepal.Length ~ Sepal.Width, data = .)%>%summary #「%<>%」將處理完的變數存回iris變數
 ```
 
->當然，你也可以自己創造屬於自己的工具，此功能為「function」，可以將多個功能合併成一個，或是自己創造一個新方法，達到減少寫重複的code。 
+> <font size="3" font face="Microsoft JhengHei" > 當然，你也可以自己創造屬於自己的工具，此功能為「function」，可以將多個功能合併成一個，或是自己創造一個新方法，達到減少寫重複的code。</font>
+
 
 建立一個人名名單，對每個人說HI，並最後加上「LOVE&PEACE」
 ```{r, echo=T}
