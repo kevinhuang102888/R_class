@@ -1,0 +1,160 @@
+---
+title: "final exam"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# wish i can pass!!
+
+(1.a) Give two simple functions to evaluate the sum of each column for a matrix. (Do not use for(. . . ))
+
+A: rowSums(X) or apply(X, 1, sum)
+
+(1.b) What is the function that can be used for comparion of computation time?
+
+A: benchmark()
+  
+(c)Try to use function in the family “APPLY” and the defined function to evaluate the following quantity for each row of a matrix?
+
+```{r cars, warning=FALSE}
+x <- matrix(c(-0.45 , 0.77, 0.16, 1.22, 1.75, 0.24,
+              0.27, 1.74, 0.07, -0.87, -0.90, 1.07,
+              -0.06, 0.33, -0.06, 0.09, 0.10, -0.04), 3, 6, byrow = TRUE)
+absolute<-function(x){
+  abs(x-mean(x))/length(x)
+}
+x2<-apply(x,1,absolute)
+apply(x2,2,sum)
+```
+
+(d) Draw the curve by the following equations and identify what the graph is.
+```{r warning=FALSE}
+method1<-function(x){
+  (1-x^2)^(1/2)
+}
+method2<-function(x){
+  -((1-x^2)^(1/2))
+}
+curve(method1,-1,1)
+curve(method2,-1,1)
+```
+
+(e) Use the dataset iris. Write a code to draw the plot:
+
+```{r warning=FALSE}
+data.1e<-iris
+setosa<-data.1e[data.1e$Species=='setosa',]
+versicolor<-data.1e[data.1e$Species=='versicolor',]
+virginica<-data.1e[data.1e$Species=='virginica',]
+plot(setosa$Sepal.Length,setosa$Petal.Length,col='black',xlim = c(4,10),
+     ylim = c(0,10),xlab='Sepal.Length',ylab = 'Petal.Length')
+points(versicolor$Sepal.Length,versicolor$Petal.Length,col='red')
+points(virginica$Sepal.Length,virginica$Petal.Length,col='green')
+legend('topright',c('setosa','versicolor','virginica'),pch=1,col=c('black','red','green'),cex=0.6)
+```
+
+2. (30%) Download the package “titanic” and library("titanic"). Use data(titanic_train) to the
+following questions:
+
+```{r pressure, warning=FALSE}
+library('titanic')
+data.2<-titanic_train
+#a
+colnames(data.2)
+#b
+length(data.2$PassengerId)
+length(data.2[data.2$Survived==1,]$PassengerId)
+#c
+pie(table(data.2$Survived),labels = c('dead','survival'))
+pie(table(data.2$Sex))
+#d
+survived<-data.2[data.2$Survived==1,]
+dead<-data.2[data.2$Survived==0,]
+table(survived$Sex)/length(survived$Sex)
+table(dead$Sex)/length(dead$Sex)
+dummy<-function(x){
+  x<-as.character(x)
+  all_vv<-unique(x)
+  newdata<-c()
+  for (r in x){
+    dummy_initial<-rep(0,length(all_vv))
+    dummy_initial[grep(r,all_vv)[1]]<-1
+    newdata<-c(newdata,dummy_initial)
+  }
+  final<-matrix(newdata,length(x),length(all_vv),byrow = T)
+  colnames(final)<-all_vv
+  final
+}
+
+#f
+colSums(dummy(titanic_train$Pclass))
+colSums(dummy(titanic_train$Sex))
+```
+
+
+3. (15%) Let x <- seq(-1.5, 1.5, 0.01) and y <- seq(-1.5, 1.5, 0.01).
+
+```{r warning=FALSE}
+x <- seq(-1.5, 1.5, 0.01) 
+y <- seq(-1.5, 1.5, 0.01)
+point<-c()
+for (t in 1:length(x)){
+  for (n in 1:length(y)){
+    x1<-x[t]
+    y1<-y[n]
+    if(x1^2*y1^3-((x1^2+y1^2-1)^3)>=0){
+      point<-c(point,c(x1,y1))
+    }
+  }
+}
+answer<-matrix(point,length(point)/2,2,byrow = T)
+plot(answer[,1],answer[,2],xlab = 'x',ylab = 'y')
+#heart
+```
+
+4. (30%) Download the package “nlme” and library(nlme). Begin with the data: data(Fatigue). There
+are three columns, which are “Path”, “cycles”, and “relLength”. Path means the ID number of a unit,
+cycles means the measurement time point, and relLength means the crack length over cycles. Use
+the Fatigue data to the following questions:
+
+```{r warning=FALSE}
+library('nlme')
+data.4<-Fatigue
+#a
+number<-length(unique(Fatigue$Path))
+#b
+path<-Fatigue[Fatigue$Path==1,]
+plot(path$cycles,path$relLength, type =
+       "b",xlab = 'time',ylab='crack length ',xlim = c(0,0.12))
+for (q in 2:number){
+  points(Fatigue[Fatigue$Path==q,]$cycles,
+         Fatigue[Fatigue$Path==q,]$relLength, type =
+           "b")
+}
+#c
+abline(h=1.4,col='red')
+#d
+answer2<-c()
+for (y in 1:number){
+  p<-Fatigue[Fatigue$Path==y,]
+  n<-length(p[p$relLength>1.4,]$relLength)
+  answer2<-c(answer2,n)
+}
+length(answer2)
+#e
+all_a<-c()
+for (k in 1:number){
+  p<-Fatigue[Fatigue$Path==k,]
+  p$relLength<-log(p$relLength)
+  fit<-lm(relLength~cycles -1,data=p)
+  all_a<-c(all_a,fit$coefficients)
+}
+all_a
+mean(all_a)
+#e
+t.test(all_a, alternative = "two.sided",
+       mu = 5, conf.level = 0.95)
+```
