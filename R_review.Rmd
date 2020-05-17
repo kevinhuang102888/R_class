@@ -5,6 +5,7 @@ date: "2020/5/6"
 output: html_document
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -27,6 +28,7 @@ a^b
 a%%b # 餘數
 a%/%b # 商數
 ```
+
 
 >  <font size="3" font face="Microsoft JhengHei"> 取log、指數、絕對值、開根號</font>
 
@@ -52,6 +54,16 @@ ceiling(c) #無條件進位
 floor(c) #無條件捨去
 ```
 
+
+以「常態分布的機率密度函數」為例，常態分布的pdf為$$f(x)=\frac{1}{\sqrt{2\pi}\sigma}e^{-\frac{(x-\mu)^2}{2\sigma^2}}  ,-\infty<x<\infty$$
+當$X\sim N(0,1)$的標準常態下，則$x=0$時可得 pdf = 0.398942。
+```{r eval=FALSE}
+mu<-0
+sigma<-1
+x<-0
+round(exp(1)^((-((x-mu)/sigma)^2)/2)*(1/sqrt(2*pi)*sigma),6)
+dnorm(0,0,1)
+```
 
 ___
 
@@ -258,11 +270,11 @@ ___
 
 2. 畫一個包含圓形完全在正方形內。連接（-1,-1）,(1,-1),(1,1),(-1,1)四個點，會形成一個正方形，假設面積是A。
 
-3. 想像在方形範圍內，隨機發射飛鏢，那麼，掉在圓內的機率是Pi/A。
+3. 想像在方形範圍內，隨機發射飛鏢，那麼，掉在圓內的機率是$\pi$/A。
 
-4. 丟一堆飛鏢，估計出 Pi/A，乘上A就可以估計出 Pi。
+4. 丟一堆飛鏢，估計出 $\pi$/A，乘上A就可以估計出 $\pi$。
 
-5. 我們試著丟10000次看看，求出Pi。
+5. 我們試著丟10000次看看，求出$\pi$。
 
 ```{r,eval=FALSE}
 count<-0
@@ -397,7 +409,9 @@ ___
 
 ___
 
+一般繪圖
 ```{r, echo=T}
+par(3,4)
 titanic<-read.csv('titanic.csv',header = T,stringsAsFactors = F)
 titanic2<-titanic[complete.cases(titanic),]
 #barchart、piechart
@@ -418,6 +432,21 @@ y<-2*x+5+rnorm(50,0,10)
 plot(x,y)
 ```
 
+進階的繪圖
+
+```{r echo=T}
+#常態分布圖形
+mu<-0
+sigma<-1
+x<-0
+normal<-function(x) exp(1)^((-((x-mu)/sigma)^2)/2)*(1/sqrt(2*pi)*sigma)
+curve(normal,from=-4,to=4,ylab='density')
+text(0,0,expression(x%~%n(0,1)))
+
+#常態分布的qqplot
+qqnorm(titanic$Fare)
+abline(0,1,col=2)
+```
 plot(x, y,
 
 type = "p", ### types of the plot
