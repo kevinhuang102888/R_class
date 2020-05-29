@@ -409,7 +409,9 @@ ___
 
 ___
 
-一般繪圖
+
+一般繪圖（長條圖、圓餅圖、直方圖、盒鬚圖、散佈圖)
+
 ```{r, echo=T}
 par(3,4)
 titanic<-read.csv('titanic.csv',header = T,stringsAsFactors = F)
@@ -422,7 +424,7 @@ barplot(x,main='各艙等的人數',col=c('#eb6383','#ffe9c5','#b4f2e1'))
 pie(x,col=c('#eb6383','#ffe9c5','#b4f2e1'))
 
 #Histogram、boxplot
-hist(titanic2$Age,col='#f6f578',main='性別',ylab='人的年齡',prob=T)
+hist(titanic2$Age,col='#ffd3e1',main='性別',ylab='人的年齡',prob=T)
 boxplot(titanic2$Age~titanic2$Sex,xlab='性別',ylab='人的年齡',col=c('#ffe0ac','#b4f2e1'))
 
 #plot
@@ -432,7 +434,7 @@ y<-2*x+5+rnorm(50,0,10)
 plot(x,y)
 ```
 
-進階的繪圖
+特殊繪圖(常態分配圖形、qqplot)
 
 ```{r echo=T}
 #常態分布圖形
@@ -447,6 +449,14 @@ text(0,0,expression(x%~%n(0,1)))
 qqnorm(titanic$Fare)
 abline(0,1,col=2)
 ```
+
+
+**Base Graphics in R**
+
+在基礎R繪圖系統下，可以由自己設計各種圖形的每個元素(座標的間距、線的粗細等)，另外，有低階函數、高階函數之分，以高階函數圖形為底，而低階函數可以在上面增加次要資訊或圖形，例如圖例、輔助線。
+
+***以高階函數「plot()」為例***
+
 plot(x, y,
 
 type = "p", ### types of the plot
