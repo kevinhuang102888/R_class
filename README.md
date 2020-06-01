@@ -9,6 +9,6 @@
 
 期末考考題：[這是啥?](https://kevinhuang102888.github.io/R_class_2019/FinalExam.pdf)
 
-期末考答案：[我好厲害](https://kevinhuang102888.github.io/R_class_2019/final_exam.html)
+期末考答案：[我的解答在這](https://kevinhuang102888.github.io/R_class_2019/final_exam.html)
 
-R語言的學習紀錄：[點這裡](https://kevinhuang102888.github.io/R_class_2019/R_review.html)
+我的R語言學習紀錄：[點這裡](https://kevinhuang102888.github.io/R_class_2019/R_review.html)
