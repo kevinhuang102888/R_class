@@ -1,0 +1,3076 @@
+---
+title: "Simutation "
+author: "A組：李泓哲、葉嘉浤、劉柏均、黃科銓、陳泯宏、朱信榮、翁瑋廷、陳宏丞、許祐誠"
+date: "2020/12/13"
+output:
+  html_document:
+    code_folding: show
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    theme: united
+    highlight: pygments
+    css: style.css
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(numDeriv)
+library(ggplot2)
+options(scipen = 15)
+```
+
+```{r message=FALSE, warning=FALSE, cache=TRUE, include=FALSE}
+library(showtext)
+font_add_google("Noto Sans TC")
+```
+
+# MLE是什麼？
+
+<p class="font_style">畫出在不同theta值下的likelihood,找出max likelihood 所對應的theta值。
+$$L(\theta;x)=\prod^n_{i=1}f(x_i;\theta)=\big(\frac{1}{\sqrt{2\pi}}\big)^n e^{-\frac{(x_i-\theta)^2}{2}}$$</p>
+
+
+<p class="font_style">以N(mu,1)、N(0,sigma^2)、Exp(rate)來說明MLE</p>
+```{r,cache=TRUE}
+par(mfrow=c(2,2))
+set.seed(1234)
+
+###N(mu,1)##
+#set the parameter
+B<-100
+n<-150
+mu<-2
+sigma1<-1 #sd
+
+#set the likelihood function and range
+L<-function(x_bar, x, sigma0=sigma1) prod( dnorm(x, mean=x_bar, sd=sigma0) ) #Likelihood
+theta.hat<-seq(1, 3, length.out = B) #set the range to search MLE
+
+#1.Find  MLE.
+Xn<-rnorm(n, mean=mu, sd=sigma1)
+l<-c()
+for (i in 1:B){
+  l[i]<-L(theta.hat[i],Xn)  
+}
+MLE_Xn<-theta.hat[which.max(l)]
+plot(theta.hat, l, ylab="Likelihood", xlab=expression(hat(mu)),main=expression(paste( "N(",mu,",",sigma^2,"=1)的MLE")))
+points(MLE_Xn, 0, col=1, pch=16, cex=1)
+text(MLE_Xn,0, labels=round(theta.hat[which.max(l)],3),font=2,pos=3)
+lines(c(MLE_Xn,MLE_Xn),c(0,L(MLE_Xn,Xn)),lty=2,col=1)
+
+#compare simlution MLE and theretical MLE
+MLE_norm_mu_simlution<-theta.hat[which.max(l)]
+MLE_norm_mu_theretical<-mean(Xn)
+
+###N(1,sigma2)###
+#set the parameter
+B<-100
+n<-150
+mu<-1
+sigma2<-0.81
+#set the likelihood function and range
+L<-function(s2, x, mu0=mu) prod(dnorm(x, mean=mu0, sd=sqrt(s2))) #likelyhood of var
+theta.hat<-seq(0.1, 1.5, length.out = B) #set the range to search MLE
+
+#1.Find MLE.
+Xn<-rnorm(n, mean=mu, sd=sqrt(sigma2))
+l<-c()
+for (i in 1:B){
+  l[i]<-L(theta.hat[i],Xn)  
+}
+MLE_Xn<-theta.hat[which.max(l)]
+plot(theta.hat, l, ylab="likelihood", xlab=expression(hat(sigma^2)),main=expression(paste("N(",mu,"=0,",sigma^2,")的MLE")))
+points(MLE_Xn, 0, col=4, pch=16, cex=1)
+text(MLE_Xn,0, labels=round(theta.hat[which.max(l)],3), col=1,cex=1, font=2,pos=3)
+lines(c(MLE_Xn,MLE_Xn),c(0,L(MLE_Xn,Xn)),lty=2)
+
+#compare simlution MLE and theretical MLE
+MLE_norm_sigma_simlution<-theta.hat[which.max(l)]
+MLE_norm_sigma_theretical<-var(Xn)*(n-1)/n
+
+#set the parameter
+B<-100
+n<-150
+rate<-2
+#set the likelihood function and range
+L<-function(r, x) prod( dexp(x,rate = r) ) #Likelyhood
+theta.hat<-seq(1,3, length.out = B)#set the range to search MLE #rate !
+
+### exp(rate)###
+#1.Find  MLE.
+Xn<-rexp(n,rate = rate)
+l<-c()
+for (i in 1:B){
+  l[i]<-L(theta.hat[i],Xn)  
+}
+MLE_Xn<-theta.hat[which.max(l)]
+plot(theta.hat, l, ylab="likelihood", xlab=expression(hat(rate)),main=expression(paste("Exp(rate)的MLE")))
+points(MLE_Xn, 0, col=4, pch=16, cex=1)
+text(MLE_Xn,0, labels=round(theta.hat[which.max(l)],3), col=1,cex=1, font=2,pos=3)
+lines(c(MLE_Xn,MLE_Xn),c(0,L(MLE_Xn,Xn)),lty=2)
+
+#compare simlution MLE and theretical MLE
+MLE_exp_rate_simlution<-theta.hat[which.max(l)]
+MLE_exp_rate_theretical<-1/mean(Xn)
+```
+
+```{r,cache=TRUE}
+Simulation<-c(MLE_norm_mu_simlution,MLE_norm_sigma_simlution,MLE_exp_rate_simlution)
+Theretical<-c(MLE_norm_mu_theretical,MLE_norm_sigma_theretical,MLE_exp_rate_theretical)
+data_all<-data.frame(Simulation,Theretical)
+row.names(data_all)<-c("N($\\mu$,1)","N(0,$\\sigma^2$)","Exp(rate=$\\lambda$)")
+knitr::kable(data_all,align = "ccc",caption = 'MLE的模擬值與理論值比較')
+```
+
+```{r ,cathe=TRUE}
+par(mfrow=c(2,2))
+set.seed(1234)
+B<-100
+n<-200
+
+#N(mu,1)
+mu<-2
+sigma1<-1 #sd
+L<-function(x_bar, x, sigma0=sigma1) prod( dnorm(x, mean=x_bar, sd=sigma0) ) #Likelihood
+theta.hat<-seq(1, 3, length.out = B) #set the range to search MLE
+MLE_data<-matrix(NA, B,n)
+
+for (i in 1:n){
+  N_data<-matrix(rnorm(B*i,mean=mu,sd=sigma1), B, i) #generate sample with size n and repeat B
+  for ( j in 1:B){        #find MLE in each B times
+    likehood<-lapply(theta.hat,function(s) L(x_bar=s,x=N_data[j,])) 
+    MLE<-theta.hat[which.max(likehood)]
+    MLE_data[j,i]<-MLE
+  }
+}
+x<-rep(1:n, each=B)
+y<-c(MLE_data)
+plot(y~jitter(x,0.1), ylab=expression("MLE"), xlab="樣本數(n)",main=expression(paste( "N(",mu,",",sigma^2,"=1)的MLE")),cex.main=1.5)
+epsilon<-0.5
+abline(h=mu, col="#ed6663")
+abline(h=mu+epsilon, col="#4e89ae", lty=2)
+abline(h=mu-epsilon, col="#4e89ae", lty=2)
+
+#N(0,sigma2)
+mu<-1
+sigma2<-0.81
+L<-function(s2, x, mu0=mu) prod(dnorm(x, mean=mu0, sd=sqrt(s2))) #likelyhood of var
+theta.hat<-seq(0.1, 1.5, length.out = B) #set the range to search MLE
+MLE_data<-matrix(NA, B,n)
+
+for (i in 1:n){
+  N_data<-matrix(rnorm(B*i, mean=mu, sd=sqrt(sigma2)), B, i) #generate sample with size n and repeat B
+  for ( j in 1:B){ #find MLE in each B times
+    likehood<-lapply(theta.hat,function(s2) L(s2,x=N_data[j,])) 
+    MLE<-theta.hat[which.max(likehood)]
+    MLE_data[j,i]<-MLE
+  }
+}
+x<-rep(1:n, each=B)
+y<-c(MLE_data)
+plot(y~jitter(x,0.1), ylab=expression("MLE"), xlab="樣本數(n)",main=expression(paste("N(",mu,"=0,",sigma^2,")的MLE")),cex.main=1.5)
+epsilon<-0.3
+abline(h=sigma2, col=2)
+abline(h=sigma2+epsilon, col=4, lty=2)
+abline(h=sigma2-epsilon, col=4, lty=2)
+
+#exp(rate)
+rate<-2
+L<-function(r, x) prod( dexp(x,rate = r) ) #Likelyhood
+theta.hat<-seq(1,3, length.out = B)#set the range to search MLE #rate !
+
+MLE_data<-matrix(NA, B,n)
+for (i in 1:n){
+  N_data<-matrix(rexp(B*i,rate =rate ), B, i) #generate sample with size n and repeat B
+  for ( j in 1:B){ #Find MLE in each time(total: B times)
+    likehood<-lapply(theta.hat,function(r) L(r,x=N_data[j,])) 
+    MLE<-theta.hat[which.max(likehood)]
+    MLE_data[j,i]<-MLE
+  }
+}
+x<-rep(1:n, each=B)
+y<-c(MLE_data)
+plot(y~jitter(x,0.1), ylab=expression("MLE"), xlab="樣本數(n)",main=expression(paste("Exp(rate)的MLE")),cex.main=1.5)
+epsilon<-0.5
+abline(h=rate, col=2)
+abline(h=rate+epsilon, col=4, lty=2)
+abline(h=rate-epsilon, col=4, lty=2)
+```
+
+
+# Likelihood Ratio Test {id="likehood"}
+
+<p class="font_style">我們先將 Likelihood Ratio 寫成$$\Lambda(\theta)=\frac{L(\theta)}{L(\hat\theta)}$$,再將取log後的 Log Likelihood Ratio 寫成$$log\Lambda(\theta)=log\bigg(\frac{L(\theta)}{L(\hat\theta)}\bigg)=log\,L(\theta)-log\,L(\hat\theta)=l(\theta)-l(\hat\theta)$$因此可以得到 Likelihood Ratio Test 的檢定統計量$$\chi^2_L=-2llr(\theta)=-2\{l(\theta)-l(\hat\theta)\}$$當$Under\, H_0$時，可以使$llr(\theta)$極大，可得到
+$$\text{max}_{H_0}[l(\theta)]-\text{max}_{H_1}[l(\theta)]=l(\theta_0) - l(\hat\theta)=log\Lambda(\theta_0)$$,因此$$\text{Under }H_0\,,\quad \chi^2_L=-2log\Lambda(\theta_0)=-2\{l(\theta_0)-l(\hat\theta)\}\sim\chi^2_1$$ </p>
+
+
+
+## Normal Distribution  N(mu,1)
+
+
+```{r,cache=TRUE}
+#normal(theta,1)
+c<-0.05
+lambda<-function(xbar, theta0=1, n=30) exp(-n*(xbar-theta0)^2/2) # LRT statistic
+curve(lambda, from=-3, to=3, xlab=expression(bar(x)), main=expression(paste(lambda(X[1],...,X[n])," = ", exp(-n(bar(x)-theta[0])^2/2))) )
+abline(h=c, col=2)
+text(2, c+0.1, paste("c = ", c), col=2)
+RR<-seq(-3, 3, 0.01)[lambda(seq(-3, 3, 0.01) )< c]
+points(RR, rep(0, length(RR)), col=2, pch=16 )
+```
+<p class="font_style">normal(theta,1)之下lambda的分配圖形，在不同的樣本數之下的趨勢改變</p>
+<p class="font_style">normal(theta,1)，在不同的樣本數下，將各lambda取-2log後，皆會服從卡方分配</p>
+```{r,cache=TRUE}
+par(mfrow=c(1,2))
+#distribution of lambda
+#theta0<-1
+B<-30000
+n1<-10;n2<-50;n3<-200
+theta0<-1
+lambda1<-c();lambda2<-c();lambda3<-c()
+for (i in 1:B){
+ x1<-rnorm(n1, mean = theta0, sd=1)
+ xbar1<-mean(x1)
+ lambda1[i]<-exp(-n1*(xbar1-theta0)^2/2)
+ x2<-rnorm(n2, mean = theta0, sd=1)
+ xbar2<-mean(x2)
+ lambda2[i]<-exp(-n2*(xbar2-theta0)^2/2)
+ x3<-rnorm(n3, mean = theta0, sd=1)
+ xbar3<-mean(x3)
+ lambda3[i]<-exp(-n3*(xbar3-theta0)^2/2)
+} 
+plot(density(lambda1, from = 0,to=1), main="Distribution of lambda",xlab=expression(paste('lambda',(bar(x)))), xlim=c(0,1) ) 
+lines(density(lambda2, from = 0,to=1),col=2)
+lines(density(lambda3, from = 0,to=1),col=3)
+legend("topleft", c("n=10","n=50","n=200"), col=c(1,2,3), lty=1)
+
+#theta0=1
+B<-30000
+n1<-10;n2<-50;n3<-200
+theta0<-1
+lambda1<-c();lambda2<-c();lambda3<-c()
+for (i in 1:B){
+ x1<-rnorm(n1, mean = theta0, sd=1)
+ xbar1<-mean(x1)
+ lambda1[i]<-exp(-n1*(xbar1-theta0)^2/2)
+ x2<-rnorm(n2, mean = theta0, sd=1)
+ xbar2<-mean(x2)
+ lambda2[i]<-exp(-n2*(xbar2-theta0)^2/2)
+ x3<-rnorm(n3, mean = theta0, sd=1)
+ xbar3<-mean(x3)
+ lambda3[i]<-exp(-n3*(xbar3-theta0)^2/2)
+} 
+#under H0(theta=theta_hat) , -2log(lambda)的機率分佈會趨近自由度為1的卡方分配
+l1<- -2*log(lambda1)
+l2<- -2*log(lambda2)
+l3<- -2*log(lambda3)
+plot(density(l1, from = 0), main="", xlim=c(0,10), xlab="")
+lines(density(l2, from = 0,to=1),col=4)
+lines(density(l3, from = 0,to=1),col=3)
+curve(dchisq(x, df=1), from = 0, to=10, add = T, col=2)
+legend("topright", c("n=10","n=50","n=200","chi-square"), col=c(1,4,3,2), lty=1)
+```
+ 
+<p class="font_style">normal(theta,1)之下lambda的分配圖形，在不同的變異數之下的趨勢改變</p>
+<p class="font_style">normal(theta,1)，在不同的變異數下，將各lambda取-2log後，var越小，越接近卡方分配</p>
+```{r,cache=TRUE}
+par(mfrow=c(1,2))
+#distribution of lambda  #你們的lambda不會跟著變嗎?
+#theta0<-1
+B<-30000
+n<-30
+theta0<-1
+lambda4<-c();lambda5<-c();lambda6<-c()
+for (i in 1:B){
+ x4<-rnorm(n, mean = theta0, sd=1)
+ xbar4<-mean(x4)
+ lambda4[i]<-exp(-n*(xbar4-theta0)^2/2)
+ x5<-rnorm(n, mean = theta0, sd=sqrt(5))
+ xbar5<-mean(x5)
+ lambda5[i]<-exp(-n*(xbar5-theta0)^2/2)
+ x6<-rnorm(n, mean = theta0, sd=sqrt(13))
+ xbar6<-mean(x6)
+ lambda6[i]<-exp(-n*(xbar6-theta0)^2/2)
+} 
+plot(density(lambda4, from = 0,to=1), main="Distribution of lambda",xlab=expression(paste('lambda',(bar(x)))), xlim=c(0,1) ) 
+lines(density(lambda5, from = 0,to=1),col=2)
+lines(density(lambda6, from = 0,to=1),col=3)
+legend("top", c("var=1","var=5","var=13"), col=c(1,2,3), lty=1)
+
+
+#theta0=1
+B<-30000
+n<-30
+theta0<-1
+lambda4<-c();lambda5<-c();lambda6<-c()
+for (i in 1:B){
+ x4<-rnorm(n, mean = theta0, sd=1)
+ xbar4<-mean(x4)
+ lambda4[i]<-exp(-n*(xbar4-theta0)^2/2)
+ x5<-rnorm(n, mean = theta0, sd=sqrt(5))
+ xbar5<-mean(x5)
+ lambda5[i]<-exp(-n*(xbar5-theta0)^2/2)
+ x6<-rnorm(n, mean = theta0, sd=sqrt(13))
+ xbar6<-mean(x6)
+ lambda6[i]<-exp(-n*(xbar6-theta0)^2/2)
+} 
+#under H0(theta=theta_hat) , -2log(lambda)的機率分佈會趨近自由度為1的卡方分配
+l1<- -2*log(lambda4)
+l2<- -2*log(lambda5)
+l3<- -2*log(lambda6)
+plot(density(l1, from = 0), main="", xlim=c(0,10), xlab="")
+lines(density(l2, from = 0),col=3)
+lines(density(l3, from = 0),col=4)
+curve(dchisq(x, df=1), from = 0, to=10, add = T, col=2)
+legend("topright", c("var=1","var=5","var=13","chi-square"), col=c(1,3,4,2), lty=1)
+```
+
+
+<p class="font_style">利用-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.05)   
+算出betaP為犯型II錯誤的機率，1-betaP即為檢定力   
+畫出當真實參數theta為不同值時，所對應的檢定力圖形   
+下圖為比較當變異數/樣本數不同時，power curve所對應的趨勢變化   </p>
+```{r,cache=TRUE}
+par(mfrow=c(1,2))
+#n=10
+mean_beta<-c()
+b<-100
+s<-seq(1,3,length.out = b)
+beta<-c()
+betaP<-c()
+theta0<-2
+#模擬出b個likelihood function
+for (o in 1:b) {
+  for (j in 1:b) {
+    n<-10
+    mean<-s[o]
+    x<-rnorm(n,mean=mean,sd=1)
+    L<-function(mean, x) prod( dnorm(x, mean=mean,sd=1) ) #likelihood function
+    theta.hat<-seq(0, 5, length.out = b)
+    l<-c()
+      for (i in 1:b){
+        l[i]<-L(theta.hat[i], x)  
+      }
+    #算出-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.05)
+    mean_beta[j]<-L(theta0,x)/L(theta.hat[which.max(l)],x)
+    if (-2*log(mean_beta[j])<qchisq(0.95, 1)){
+      beta[j]<-1
+    }
+    else {
+      beta[j]<-0
+    }
+    betaP[o]<-mean(beta)
+  } 
+  j<-0
+}
+
+#算出betaP為犯型II錯誤的機率，1-betaP即為檢定力
+power<-1-betaP #p(reject H0 | Ha is true)
+#畫出當真實參數theta為不同值時，所對應的檢定力
+Smooth.spline=smooth.spline(s,power)
+likehood_power_mu_n1<-Smooth.spline
+plot(Smooth.spline,main = "power curve", ylab = "probability", xlab = "theta",type = "l",col=2)
+theta0hat<-which.min(power)
+s[theta0hat] #simulated theta
+theta0 #actual theta 
+#verify
+#算出alpha為犯型I錯誤的機率
+alpha<-c()
+for (k in 1:B) {
+  if (-2*log(lambda1[k])>=qchisq(0.95, 1)){
+    alpha[k]<-1
+  }
+  else {
+    alpha[k]<-0
+  }
+} # RR={-2*log(lambda)>=(chi-square(1)_alpha=0.05)=3.8415}
+mean(alpha) #0.05 , p(reject H0 | H0 is True)
+
+
+#n=50
+mean_beta<-c()
+b<-100
+s<-seq(1,3,length.out = b)
+beta<-c()
+betaP<-c()
+theta0<-2
+#模擬出b個likelihood function
+for (o in 1:b) {
+  for (j in 1:b) {
+    n<-50
+    mean<-s[o]
+    x<-rnorm(n,mean=mean,sd=1)
+    L<-function(mean, x) prod( dnorm(x, mean=mean,sd=1) ) #likelihood function
+    theta.hat<-seq(0, 5, length.out = b)
+    l<-c()
+      for (i in 1:b){
+        l[i]<-L(theta.hat[i], x)  
+      }
+    #算出-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.05)
+    mean_beta[j]<-L(theta0,x)/L(theta.hat[which.max(l)],x)
+    if (-2*log(mean_beta[j])<qchisq(0.95, 1)){
+      beta[j]<-1
+    }
+    else {
+      beta[j]<-0
+    }
+    betaP[o]<-mean(beta)
+  } 
+  j<-0
+}
+#算出betaP為犯型II錯誤的機率，1-betaP即為檢定力
+power<-1-betaP #p(reject H0 | Ha is true)
+#畫出當真實參數theta為不同值時，所對應的檢定力
+Smooth.spline=smooth.spline(s,power)
+likehood_power_mu_n2<-Smooth.spline
+lines(Smooth.spline,main = "power curve", ylab = "probability", xlab = "theta",type = "l",col=3)
+theta0hat<-which.min(power)
+s[theta0hat] #simulated theta
+theta0 #actual theta 
+#verify
+#算出alpha為犯型I錯誤的機率
+alpha<-c()
+for (k in 1:B) {
+  if (-2*log(lambda2[k])>=qchisq(0.95, 1)){
+    alpha[k]<-1
+  }
+  else {
+    alpha[k]<-0
+  }
+} # RR={-2*log(lambda)>=(chi-square(1)_alpha=0.05)=3.8415}
+mean(alpha) #0.05 , p(reject H0 | H0 is True)
+
+#n=200
+mean_beta<-c()
+b<-100
+s<-seq(1,3,length.out = b)
+beta<-c()
+betaP<-c()
+theta0<-2
+#模擬出b個likelihood function
+for (o in 1:b) {
+  for (j in 1:b) {
+    n<-200
+    mean<-s[o]
+    x<-rnorm(n,mean=mean,sd=1)
+    L<-function(mean, x) prod( dnorm(x, mean=mean,sd=1) ) #likelihood function
+    theta.hat<-seq(0, 5, length.out = b)
+    l<-c()
+      for (i in 1:b){
+        l[i]<-L(theta.hat[i], x)  
+      }
+    #算出-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.05)
+    mean_beta[j]<-L(theta0,x)/L(theta.hat[which.max(l)],x)
+    if (-2*log(mean_beta[j])<qchisq(0.95, 1)){
+      beta[j]<-1
+    }
+    else {
+      beta[j]<-0
+    }
+    betaP[o]<-mean(beta)
+  } 
+  j<-0
+}
+#算出betaP為犯型II錯誤的機率，1-betaP即為檢定力
+power<-1-betaP #p(reject H0 | Ha is true)
+#畫出當真實參數theta為不同值時，所對應的檢定力
+Smooth.spline=smooth.spline(s,power)
+likehood_power_mu_n3<-Smooth.spline
+lines(Smooth.spline,main = "power curve", ylab = "probability", xlab = "theta",type = "l",col=4)
+theta0hat<-which.min(power)
+s[theta0hat] #simulated theta
+theta0 #actual theta
+#verify
+#算出alpha為犯型I錯誤的機率
+alpha<-c()
+for (k in 1:B) {
+  if (-2*log(lambda3[k])>=qchisq(0.95, 1)){
+    alpha[k]<-1
+  }
+  else {
+    alpha[k]<-0
+  }
+} # RR={-2*log(lambda)>=(chi-square(1)_alpha=0.05)=3.8415}
+mean(alpha) #0.05 , p(reject H0 | H0 is True)
+legend("topright",c("n=10","n=50","n=200"),col = c(2,3,4),lty = 1)
+
+#var=1
+mean_beta<-c()
+b<-100
+s<-seq(1,3,length.out = b)
+beta<-c()
+betaP<-c()
+theta0<-2
+#模擬出b個likelihood function
+for (o in 1:b) {
+  for (j in 1:b) {
+    n<-50
+    mean<-s[o]
+    x<-rnorm(n,mean=mean,sd=1)
+    L<-function(mean, x) prod( dnorm(x, mean=mean,sd=1) ) #likelihood function
+    theta.hat<-seq(0, 5, length.out = b)
+    l<-c()
+      for (i in 1:b){
+        l[i]<-L(theta.hat[i], x)  
+      }
+    #算出-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.05)
+    mean_beta[j]<-L(theta0,x)/L(theta.hat[which.max(l)],x)
+    if (-2*log(mean_beta[j])<qchisq(0.95, 1)){
+      beta[j]<-1
+    }
+    else {
+      beta[j]<-0
+    }
+    betaP[o]<-mean(beta)
+  } 
+  j<-0
+}
+#算出betaP為犯型II錯誤的機率，1-betaP即為檢定力
+power<-1-betaP#p(reject H0 | Ha is true)
+#畫出當真實參數theta為不同值時，所對應的檢定力
+Smooth.spline=smooth.spline(s,power)
+likehood_power_mu_var1<-Smooth.spline
+plot(Smooth.spline,main = "power curve", ylab = "probability", xlab = "theta",type = "l",col=2)
+theta0hat<-which.min(power)
+s[theta0hat] #simulated theta
+theta0 #actual theta 
+#verify
+#算出alpha為犯型I錯誤的機率
+alpha<-c()
+for (k in 1:B) {
+  if (-2*log(lambda4[k])>=qchisq(0.95, 1)){
+    alpha[k]<-1
+  }
+  else {
+    alpha[k]<-0
+  }
+} # RR={-2*log(lambda)>=(chi-square(1)_alpha=0.05)=3.8415}
+mean(alpha) #0.05 , p(reject H0 | H0 is True)
+
+#var=5
+mean_beta<-c()
+b<-100
+s<-seq(1,3,length.out = b)
+beta<-c()
+betaP<-c()
+theta0<-2
+#模擬出b個likelihood function
+for (o in 1:b) {
+  for (j in 1:b) {
+    n<-50
+    mean<-s[o]
+    x<-rnorm(n,mean=mean,sd=sqrt(5))
+    L<-function(mean, x) prod( dnorm(x, mean=mean,sd=sqrt(5)) ) #likelihood function
+    theta.hat<-seq(0, 5, length.out = b)
+    l<-c()
+      for (i in 1:b){
+        l[i]<-L(theta.hat[i], x)  
+      }
+    #算出-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.05)
+    mean_beta[j]<-L(theta0,x)/L(theta.hat[which.max(l)],x)
+    if (-2*log(mean_beta[j])<qchisq(0.95, 1)){
+      beta[j]<-1
+    }
+    else {
+      beta[j]<-0
+    }
+    betaP[o]<-mean(beta)
+  } 
+  j<-0
+}
+#算出betaP為犯型II錯誤的機率，1-betaP即為檢定力
+power<-1-betaP #p(reject H0 | Ha is true)
+#畫出當真實參數theta為不同值時，所對應的檢定力
+Smooth.spline=smooth.spline(s,power)
+likehood_power_mu_var2<-Smooth.spline
+lines(Smooth.spline,main = "power curve", ylab = "probability", xlab = "theta",type = "l",col=3)
+theta0hat<-which.min(power)
+s[theta0hat] #simulated theta
+theta0 #actual theta 
+#verify
+#算出alpha為犯型I錯誤的機率
+alpha<-c()
+for (k in 1:B) {
+  if (-2*log(lambda5[k])>=qchisq(0.95, 1)){
+    alpha[k]<-1
+  }
+  else {
+    alpha[k]<-0
+  }
+} # RR={-2*log(lambda)>=(chi-square(1)_alpha=0.05)=3.8415}
+mean(alpha) #0.05 , p(reject H0 | H0 is True)
+
+#var=13
+mean_beta<-c()
+b<-100
+s<-seq(1,3,length.out = b)
+beta<-c()
+betaP<-c()
+theta0<-2
+#模擬出b個likelihood function
+for (o in 1:b) {
+  for (j in 1:b) {
+    n<-50
+    mean<-s[o]
+    x<-rnorm(n,mean=mean,sd=sqrt(13))
+    L<-function(mean, x) prod( dnorm(x, mean=mean,sd=sqrt(13)) ) #likelihood function
+    theta.hat<-seq(0, 5, length.out = b)
+    l<-c()
+      for (i in 1:b){
+        l[i]<-L(theta.hat[i], x)  
+      }
+    #算出-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.05)
+    mean_beta[j]<-L(theta0,x)/L(theta.hat[which.max(l)],x)
+    if (-2*log(mean_beta[j])<qchisq(0.95, 1)){
+      beta[j]<-1
+    }
+    else {
+      beta[j]<-0
+    }
+    betaP[o]<-mean(beta)
+  } 
+  j<-0
+}
+#算出betaP為犯型II錯誤的機率，1-betaP即為檢定力
+power<-1-betaP #p(reject H0 | Ha is true)
+#畫出當真實參數theta為不同值時，所對應的檢定力
+Smooth.spline=smooth.spline(s,power)
+likehood_power_mu_var3<-Smooth.spline
+lines(Smooth.spline,main = "power curve", ylab = "probability", xlab = "theta",type = "l",col=4)
+theta0hat<-which.min(power)
+s[theta0hat] #simulated theta
+theta0 #actual theta
+#verify
+#算出alpha為犯型I錯誤的機率
+alpha<-c()
+for (k in 1:B) {
+  if (-2*log(lambda6[k])>=qchisq(0.95, 1)){
+    alpha[k]<-1
+  }
+  else {
+    alpha[k]<-0
+  }
+} # RR={-2*log(lambda)>=(chi-square(1)_alpha=0.05)=3.8415}
+mean(alpha) #0.05 , p(reject H0 | H0 is True)
+legend("topright",c("var=1","var=5","var=13"),col = c(2,3,4),lty = 1)
+```
+
+
+## Normal Distribution  N(0,theta)
+
+```{r,cache=TRUE}
+#normal(0,theta)
+c<-0.05
+lambda<-function(sumx2, theta0=0.81, n=30) (n*theta0/sumx2)^(-n/2)*exp((n-sumx2/theta0)/2) # LRT statistic
+curve(lambda, from=0, to=70, xlab=expression(sum(x[i])^2), main=expression(paste(lambda(X[1],...,X[n])," = ", (n*theta[0]/sum(x[i]^2))^(n/2)*exp((n-(sum(x[i]^2)/theta[0])/2)))) )
+abline(h=c, col=2)
+text(60, c+0.1, paste("c = ", c), col=2)
+RR<-seq(0, 70, 0.01)[lambda(seq(0, 70, 0.01) )< c]
+points(RR, rep(0, length(RR)), col=2, pch=16 )
+```
+<p class="font_style">normal(0,theta)之下lambda的分配圖形，在不同的樣本數之下的趨勢改變</p>
+<p class="font_style">normal(0,theta)，將lambda取-2log後，會服從卡方分配</p>
+```{r,cache=TRUE}
+par(mfrow=c(1,2))
+#distribution of lambda
+#theta0<-0.81
+B<-30000
+n1<-10;n2<-50;n3<-200
+theta0<-0.81
+lambda1<-c();lambda2<-c();lambda3<-c();
+for (i in 1:B){
+ x1<-rnorm(n1, mean = 0, sd= sqrt(theta0))
+ sumx21<-sum(x1^2)
+ lambda1[i]<-(n1*theta0/sumx21)^(-n1/2)*exp((n1-sumx21/theta0)/2)
+ x2<-rnorm(n2, mean = 0, sd= sqrt(theta0))
+ sumx22<-sum(x2^2)
+ lambda2[i]<-(n2*theta0/sumx22)^(-n2/2)*exp((n2-sumx22/theta0)/2)
+ x3<-rnorm(n3, mean = 0, sd= sqrt(theta0))
+ sumx23<-sum(x3^2)
+ lambda3[i]<-(n3*theta0/sumx23)^(-n3/2)*exp((n3-sumx23/theta0)/2)
+} 
+plot(density(lambda1, from = 0,to=1), main="Distribution of lambda",xlab='lambda', xlim=c(0,1) ) 
+lines(density(lambda2, from = 0,to=1),col=2)
+lines(density(lambda3, from = 0,to=1),col=3)
+legend("topleft", c("n=10","n=50","n=200"), col=c(1,2,3), lty=1)
+
+
+#theta0=0.81
+B<-30000
+n<-50
+theta0<-0.81
+lambda1<-c();lambda2<-c();lambda3<-c();
+for (i in 1:B){
+ x1<-rnorm(n1, mean = 0, sd= sqrt(theta0))
+ sumx21<-sum(x1^2)
+ lambda1[i]<-(n1*theta0/sumx21)^(-n1/2)*exp((n1-sumx21/theta0)/2)
+ x2<-rnorm(n2, mean = 0, sd= sqrt(theta0))
+ sumx22<-sum(x2^2)
+ lambda2[i]<-(n2*theta0/sumx22)^(-n2/2)*exp((n2-sumx22/theta0)/2)
+ x3<-rnorm(n3, mean = 0, sd= sqrt(theta0))
+ sumx23<-sum(x3^2)
+ lambda3[i]<-(n3*theta0/sumx23)^(-n3/2)*exp((n3-sumx23/theta0)/2)
+} 
+#under H0(theta=theta_hat) , -2log(lambda)的機率分佈會趨近自由度為1的卡方分配
+l<- -2*log(lambda1)
+l1<- -2*log(lambda2)
+l2<- -2*log(lambda3)
+plot(density(l, from = 0), main="", xlim=c(0,10), xlab="")
+lines(density(l1, from = 0),col=3)
+lines(density(l2, from = 0),col=4)
+curve(dchisq(x, df=1), from = 0, to=10, add = T, col=2)
+legend("topright", c("n=10","n=50","n=200","chi-square"), col=c(1,3,4,2), lty=1)
+```
+
+<p class="font_style">normal(0,theta)之下lambda的分配圖形，在不同的平均數之下的趨勢改變</p>
+<p class="font_style">normal(0,theta)，在不同的平均數下，將各lambda取-2log後，皆會服從卡方分配</p>
+```{r,cache=TRUE}
+par(mfrow=c(1,2))
+#distribution of lambda
+#theta0<-0.81
+B<-30000
+n<-50
+theta0<-0.81
+lambda4<-c();lambda5<-c();lambda6<-c();
+for (i in 1:B){ 
+  mean=c(1,3,5)
+ x4<-rnorm(n, mean = mean[1], sd= sqrt(theta0))
+ sumx24<-sum((x4-mean[1])^2)
+ lambda4[i]<-(n*theta0/sumx24)^(-n/2)*exp((n-sumx24/theta0)/2)
+ x5<-rnorm(n, mean = mean[2], sd= sqrt(theta0))
+ sumx25<-sum((x5-mean[2])^2)
+ lambda5[i]<-(n*theta0/sumx25)^(-n/2)*exp((n-sumx25/theta0)/2)
+ x6<-rnorm(n, mean = mean[3], sd= sqrt(theta0))
+ sumx26<-sum((x6-mean[3])^2)
+ lambda6[i]<-(n*theta0/sumx26)^(-n/2)*exp((n-sumx26/theta0)/2)
+} 
+plot(density(lambda4, from = 0,to=1), main="Distribution of lambda",xlab='lambda', xlim=c(0,1) ) 
+lines(density(lambda5, from = 0,to=1),col=2)
+lines(density(lambda6, from = 0,to=1),col=3) 
+legend("topleft", c("mu=1","mu=3","mu=5"), col=c(1,2,3), lty=1)
+
+#theta0=0.81
+B<-30000
+n<-50
+theta0<-0.81
+lambda4<-c();lambda5<-c();lambda6<-c();
+for (i in 1:B){ 
+  mean=c(1,3,5)
+ x4<-rnorm(n, mean = mean[1], sd= sqrt(theta0))
+ sumx4<-sum((x4-mean[1])^2)
+ lambda4[i]<-(n*theta0/sumx4)^(-n/2)*exp((n-sumx4/theta0)/2)
+ x5<-rnorm(n, mean = mean[2], sd= sqrt(theta0))
+ sumx25<-sum((x5-mean[2])^2)
+ lambda5[i]<-(n*theta0/sumx25)^(-n/2)*exp((n-sumx25/theta0)/2)
+ x6<-rnorm(n, mean = mean[3], sd= sqrt(theta0))
+ sumx26<-sum((x6-mean[3])^2)
+ lambda6[i]<-(n*theta0/sumx26)^(-n/2)*exp((n-sumx26/theta0)/2)
+} 
+#under H0(theta=theta_hat) , -2log(lambda)的機率分佈會趨近自由度為1的卡方分配
+l<- -2*log(lambda4)
+l1<- -2*log(lambda5)
+l2<- -2*log(lambda6)
+plot(density(l, from = 0), main="", xlim=c(0,10), xlab="")
+lines(density(l1, from = 0),col=3)
+lines(density(l2, from = 0),col=4)
+curve(dchisq(x, df=1), from = 0, to=10, add = T, col=2)
+legend("topright", c("mu=1","mu=3","mu=5","chi-square"), col=c(1,3,4,2), lty=1)
+```
+
+
+ 
+<p class="font_style">利用-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.05) 算出betaP為犯型II錯誤的機率，1-betaP即為檢定力  
+畫出當真實參數theta為不同值時，所對應的檢定力圖形  
+下圖為比較當平均數不同時，power curve所對應的趨勢變化</p>
+```{r,cache=TRUE}
+par(mfrow=c(1,2))
+#n=10
+s2_beta<-c()
+b<-100
+s<-seq(0.2, 2, length.out =100)
+beta<-c()
+betaP<-c()
+theta0<-0.81
+#模擬出b個likelihood function
+for (o in 1:b) {
+  for (j in 1:b) {
+    n<-10
+    s2<-s[o]
+    x<-rnorm(n,mean=0,sd=sqrt(s2))
+    L<-function(s2, x) prod( dnorm(x, mean=0,sd=sqrt(s2)) ) #likelihood function
+    theta.hat<-seq(0, 3, length.out = b)
+    l<-c()
+      for (i in 1:b){
+        l[i]<-L(theta.hat[i], x)  
+      }
+    #算出-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.01)
+    s2_beta[j]<-L(theta0,x)/L(theta.hat[which.max(l)],x)
+    if (-2*log(s2_beta[j])<qchisq(0.95, 1)){
+      beta[j]<-1
+    }
+    else {
+      beta[j]<-0
+    }
+    betaP[o]<-mean(beta)
+  } 
+  j<-0
+}
+#算出betaP為犯型II錯誤的機率，1-betaP即為檢定力
+power<-1-betaP #p(reject H0 | Ha is true)
+#畫出當真實參數theta為不同值時，所對應的檢定力
+Smooth.spline=smooth.spline(s,power)
+likehood_power_var_n1<-Smooth.spline
+plot(Smooth.spline,main = "power curve", ylab = "probability", xlab = "theta",type = "l",col=2)
+theta0hat<-which.min(power)
+s[theta0hat] #simulated theta
+theta0 #actual theta
+#算出alpha為犯型I錯誤的機率
+#verify
+alpha<-c()
+for (k in 1:B) {
+  if (-2*log(lambda1[k])>=qchisq(0.95, 1)){
+    alpha[k]<-1
+  }
+  else {
+    alpha[k]<-0
+  }
+} # RR={-2*log(lambda)>=(chi-square(1)_alpha=0.05)=3.8415}
+mean(alpha) #0.05 , p(reject H0 | H0 is True)
+
+#n=50
+s2_beta<-c()
+b<-100
+s<-seq(0.2, 2, length.out =100)
+beta<-c()
+betaP<-c()
+theta0<-0.81
+#模擬出b個likelihood function
+for (o in 1:b) {
+  for (j in 1:b) {
+    n<-50
+    s2<-s[o]
+    x<-rnorm(n,mean=0,sd=sqrt(s2))
+    L<-function(s2, x) prod( dnorm(x, mean=0,sd=sqrt(s2)) ) #likelihood function
+    theta.hat<-seq(0, 3, length.out = b)
+    l<-c()
+      for (i in 1:b){
+        l[i]<-L(theta.hat[i], x)  
+      }
+    #算出-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.01)
+    s2_beta[j]<-L(theta0,x)/L(theta.hat[which.max(l)],x)
+    if (-2*log(s2_beta[j])<qchisq(0.95, 1)){
+      beta[j]<-1
+    }
+    else {
+      beta[j]<-0
+    }
+    betaP[o]<-mean(beta)
+  } 
+  j<-0
+}
+#算出betaP為犯型II錯誤的機率，1-betaP即為檢定力
+power<-1-betaP #p(reject H0 | Ha is true)
+#畫出當真實參數theta為不同值時，所對應的檢定力
+Smooth.spline=smooth.spline(s,power)
+likehood_power_var_n2<-Smooth.spline
+lines(Smooth.spline,main = "power curve", ylab = "probability", xlab = "theta",type = "l",col=3)
+theta0hat<-which.min(power)
+s[theta0hat] #simulated theta
+theta0 #actual theta
+#算出alpha為犯型I錯誤的機率
+#verify
+alpha<-c()
+for (k in 1:B) {
+  if (-2*log(lambda2[k])>=qchisq(0.95, 1)){
+    alpha[k]<-1
+  }
+  else {
+    alpha[k]<-0
+  }
+} # RR={-2*log(lambda)>=(chi-square(1)_alpha=0.05)=3.8415}
+mean(alpha) #0.05 , p(reject H0 | H0 is True)
+
+#n=200
+s2_beta<-c()
+b<-100
+s<-seq(0.2, 2, length.out =100)
+beta<-c()
+betaP<-c()
+theta0<-0.81
+#模擬出b個likelihood function
+for (o in 1:b) {
+  for (j in 1:b) {
+    n<-200
+    s2<-s[o]
+    x<-rnorm(n,mean=0,sd=sqrt(s2))
+    L<-function(s2, x) prod( dnorm(x, mean=0,sd=sqrt(s2)) ) #likelihood function
+    theta.hat<-seq(0, 3, length.out = b)
+    l<-c()
+      for (i in 1:b){
+        l[i]<-L(theta.hat[i], x)  
+      }
+    #算出-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.01)
+    s2_beta[j]<-L(theta0,x)/L(theta.hat[which.max(l)],x)
+    if (-2*log(s2_beta[j])<qchisq(0.95, 1)){
+      beta[j]<-1
+    }
+    else {
+      beta[j]<-0
+    }
+    betaP[o]<-mean(beta)
+  } 
+  j<-0
+}
+#算出betaP為犯型II錯誤的機率，1-betaP即為檢定力
+power<-1-betaP #p(reject H0 | Ha is true)
+#畫出當真實參數theta為不同值時，所對應的檢定力
+Smooth.spline=smooth.spline(s,power)
+likehood_power_var_n3<-Smooth.spline
+lines(Smooth.spline,main = "power curve", ylab = "probability", xlab = "theta",type = "l",col=4)
+theta0hat<-which.min(power)
+s[theta0hat] #simulated theta
+theta0 #actual theta
+#算出alpha為犯型I錯誤的機率
+#verify
+alpha<-c()
+for (k in 1:B) {
+  if (-2*log(lambda3[k])>=qchisq(0.95, 1)){
+    alpha[k]<-1
+  }
+  else {
+    alpha[k]<-0
+  }
+} # RR={-2*log(lambda)>=(chi-square(1)_alpha=0.05)=3.8415}
+mean(alpha) #0.05 , p(reject H0 | H0 is True)
+legend("topright",c("n=10","n=50","n=200"),col = c(2,3,4),lty = 1)
+
+#mean=1
+s2_beta<-c()
+b<-100
+s<-seq(0.2, 2, length.out =100)
+beta<-c()
+betaP<-c()
+theta0<-0.81
+#模擬出b個likelihood function
+for (o in 1:b) {
+  for (j in 1:b) {
+    n<-50
+    s2<-s[o]
+    x<-rnorm(n,mean=1,sd=sqrt(s2))
+    L<-function(s2, x) prod( dnorm(x, mean=1,sd=sqrt(s2)) ) #likelihood function
+    theta.hat<-seq(0, 3, length.out = b)
+    l<-c()
+      for (i in 1:b){
+        l[i]<-L(theta.hat[i], x)  
+      }
+    #算出-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.01)
+    s2_beta[j]<-L(theta0,x)/L(theta.hat[which.max(l)],x)
+    if (-2*log(s2_beta[j])<qchisq(0.95, 1)){
+      beta[j]<-1
+    }
+    else {
+      beta[j]<-0
+    }
+    betaP[o]<-mean(beta)
+  } 
+  j<-0
+}
+#算出betaP為犯型II錯誤的機率，1-betaP即為檢定力
+power<-1-betaP #p(reject H0 | Ha is true)
+#畫出當真實參數theta為不同值時，所對應的檢定力
+Smooth.spline=smooth.spline(s,power)
+likehood_power_var_mean1<-Smooth.spline
+plot(Smooth.spline,main = "power curve", ylab = "probability", xlab = "theta",type = "l",col=2)
+theta0hat<-which.min(power)
+s[theta0hat] #simulated theta
+theta0 #actual theta
+#算出alpha為犯型I錯誤的機率
+#verify
+alpha<-c()
+for (k in 1:B) {
+  if (-2*log(lambda4[k])>=qchisq(0.95, 1)){
+    alpha[k]<-1
+  }
+  else {
+    alpha[k]<-0
+  }
+} # RR={-2*log(lambda)>=(chi-square(1)_alpha=0.05)=3.8415}
+mean(alpha) #0.05 , p(reject H0 | H0 is True)
+
+#mean=3
+s2_beta<-c()
+b<-100
+s<-seq(0.2, 2, length.out =100)
+beta<-c()
+betaP<-c()
+theta0<-0.81
+#模擬出b個likelihood function
+for (o in 1:b) {
+  for (j in 1:b) {
+    n<-50
+    s2<-s[o]
+    x<-rnorm(n,mean=3,sd=sqrt(s2))
+    L<-function(s2, x) prod( dnorm(x, mean=3,sd=sqrt(s2)) ) #likelihood function
+    theta.hat<-seq(0, 3, length.out = b)
+    l<-c()
+      for (i in 1:b){
+        l[i]<-L(theta.hat[i], x)  
+      }
+    #算出-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.01)
+    s2_beta[j]<-L(theta0,x)/L(theta.hat[which.max(l)],x)
+    if (-2*log(s2_beta[j])<qchisq(0.95, 1)){
+      beta[j]<-1
+    }
+    else {
+      beta[j]<-0
+    }
+    betaP[o]<-mean(beta)
+  } 
+  j<-0
+}
+#算出betaP為犯型II錯誤的機率，1-betaP即為檢定力
+power<-1-betaP #p(reject H0 | Ha is true)
+#畫出當真實參數theta為不同值時，所對應的檢定力
+Smooth.spline=smooth.spline(s,power)
+likehood_power_var_mean2<-Smooth.spline
+lines(Smooth.spline,main = "power curve", ylab = "probability", xlab = "theta",type = "l",col=3)
+theta0hat<-which.min(power)
+s[theta0hat] #simulated theta
+theta0 #actual theta
+#算出alpha為犯型I錯誤的機率
+#verify
+alpha<-c()
+for (k in 1:B) {
+  if (-2*log(lambda5[k])>=qchisq(0.95, 1)){
+    alpha[k]<-1
+  }
+  else {
+    alpha[k]<-0
+  }
+} # RR={-2*log(lambda)>=(chi-square(1)_alpha=0.05)=3.8415}
+mean(alpha) #0.05 , p(reject H0 | H0 is True)
+
+#mean=5
+s2_beta<-c()
+b<-100
+s<-seq(0.2, 2, length.out =100)
+beta<-c()
+betaP<-c()
+theta0<-0.81
+#模擬出b個likelihood function
+for (o in 1:b) {
+  for (j in 1:b) {
+    n<-50
+    s2<-s[o]
+    x<-rnorm(n,mean=5,sd=sqrt(s2))
+    L<-function(s2, x) prod( dnorm(x, mean=5,sd=sqrt(s2)) ) #likelihood function
+    theta.hat<-seq(0, 3, length.out = b)
+    l<-c()
+      for (i in 1:b){
+        l[i]<-L(theta.hat[i], x)  
+      }
+    #算出-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.01)
+    s2_beta[j]<-L(theta0,x)/L(theta.hat[which.max(l)],x)
+    if (-2*log(s2_beta[j])<qchisq(0.95, 1)){
+      beta[j]<-1
+    }
+    else {
+      beta[j]<-0
+    }
+    betaP[o]<-mean(beta)
+  } 
+  j<-0
+}
+#算出betaP為犯型II錯誤的機率，1-betaP即為檢定力
+power<-1-betaP #p(reject H0 | Ha is true)
+#畫出當真實參數theta為不同值時，所對應的檢定力
+Smooth.spline=smooth.spline(s,power)
+likehood_power_var_mean3<-Smooth.spline
+lines(Smooth.spline,main = "power curve", ylab = "probability", xlab = "theta",type = "l",col=4)
+theta0hat<-which.min(power)
+s[theta0hat] #simulated theta
+theta0 #actual theta
+#算出alpha為犯型I錯誤的機率
+#verify
+alpha<-c()
+for (k in 1:B) {
+  if (-2*log(lambda6[k])>=qchisq(0.95, 1)){
+    alpha[k]<-1
+  }
+  else {
+    alpha[k]<-0
+  }
+} # RR={-2*log(lambda)>=(chi-square(1)_alpha=0.05)=3.8415}
+mean(alpha) #0.05 , p(reject H0 | H0 is True)
+legend("topright",c("mean=1","mean=3","mean=5"),col = c(2,3,4),lty = 1)
+```
+
+
+## Exponential distribution exp(rate)
+
+<p class="font_style">當lambda=2 & 等於0.5及1時的exponential distribution 圖形。</p>
+```{r,cache=TRUE}
+x <- seq(0, 10, 0.1)
+
+# lambda = 2
+plot(x, dexp(x, 2), type = "l",ylab = "", lwd = 2, col = 2)
+# lambda = 1
+lines(x, dexp(x, rate = 1), col = 8, lty = 1, lwd = 2)
+# lambda = 0.5
+lines(x, dexp(x, rate = 0.5), col = 5, lty = 1, lwd = 2) 
+
+legend("topright", c("lambda=0.5","lambda=1","lambda=2"), col=c(5,8,2), lty=1)
+```
+
+
+
+```{r,cache=TRUE}
+#exponential
+c<-0.05
+lambda<-function(xbar, theta0=1, n=30) exp(n-n*xbar/theta0)*xbar^n/theta0^n # LRT statistic
+curve(lambda, from=0, to=3, xlab=expression(bar(x)), main=expression(paste(lambda(X[1],...,X[n])," = ", exp(n-n*bar(x)/theta[0]),"*",(bar(x)/theta[0])^n)) )
+abline(h=c, col=2)
+text(2.5, c+0.1, paste("c = ", c), col=2)
+RR<-seq(0, 3, 0.01)[lambda(seq(0, 3, 0.01) )< c]
+points(RR, rep(0, length(RR)), col=2, pch=16 )
+```
+<p class="font_style">exp(theta)之下lambda的分配圖形，在不同的樣本數之下的趨勢改變</p>
+<p class="font_style">exp(theta)，將lambda取-2log後，會服從卡方分配 </p>
+```{r}
+
+#distribution of lambda
+#theta0=1
+B<-30000
+n1<-10;n2<-50;n3<-200
+theta0<-1
+lambda1<-c();lambda2<-c();lambda3<-c()
+for (i in 1:B){
+ x1<-rexp(n1, rate = theta0)
+ xbar1<-mean(x1)
+ lambda1[i]<-exp(n1-n1*xbar1/theta0)*(xbar1/theta0)^n1
+ x2<-rexp(n2, rate = theta0)
+ xbar2<-mean(x2)
+ lambda2[i]<-exp(n2-n2*xbar2/theta0)*(xbar2/theta0)^n2
+ x3<-rexp(n3, rate = theta0)
+ xbar3<-mean(x3)
+ lambda3[i]<-exp(n3-n3*xbar3/theta0)*(xbar3/theta0)^n3
+}  
+plot(density(lambda1, from = 0,to=1), main="Distribution of lambda",xlab=expression(paste('lambda',(bar(x)))), xlim=c(0,1) ) 
+lines(density(lambda2, from = 0,to=1),col=2)
+lines(density(lambda3, from = 0,to=1),col=3)
+legend("topleft", c("n=10","n=50","n=200"), col=c(1,2,3), lty=1)
+
+
+#distribution of lambda
+#theta0=1
+B<-30000
+n1<-10;n2<-50;n3<-200
+theta0<-1
+lambda1<-c();lambda2<-c();lambda3<-c()
+for (i in 1:B){
+ x1<-rexp(n1, rate = theta0)
+ xbar1<-mean(x1)
+ lambda1[i]<-exp(n1-n1*xbar1/theta0)*(xbar1/theta0)^n1
+ x2<-rexp(n2, rate = theta0)
+ xbar2<-mean(x2)
+ lambda2[i]<-exp(n2-n2*xbar2/theta0)*(xbar2/theta0)^n2
+ x3<-rexp(n3, rate = theta0)
+ xbar3<-mean(x3)
+ lambda3[i]<-exp(n3-n3*xbar3/theta0)*(xbar3/theta0)^n3
+}  
+#under H0(theta=theta_hat) , -2log(lambda)的機率分佈會趨近自由度為1的卡方分配
+l1<- -2*log(lambda1)
+l2<- -2*log(lambda2)
+l3<- -2*log(lambda3)
+plot(density(l1, from = 0), main="", xlim=c(0,10), xlab="")
+lines(density(l2, from = 0),col=3)
+lines(density(l3, from = 0),col=4)
+curve(dchisq(x, df=1), from = 0, to=10, add = T, col=2)
+legend("topright", c("n=10","n=50","n=200","chi-square"), col=c(1,3,4,2), lty=1)
+```
+
+ 
+<p class="font_style">利用-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.05)   
+算出betaP為犯型II錯誤的機率，1-betaP即為檢定力   
+畫出當真實參數theta為不同值時，所對應的檢定力圖形   
+下圖為比較當樣本數不同時，power curve所對應的趨勢變化</p>
+```{r,cache=TRUE}
+#n=10
+lambda_beta<-c()
+b<-100
+s<-seq(1,3,length.out = b)
+beta<-c()
+betaP<-c()
+#模擬出b個likelihood function
+for (o in 1:b) {
+  for (j in 1:b) {
+    n<-10
+    rate<-2
+    x<-rexp(n,rate=s[o])
+    L<-function(rate, x) prod( dexp(x, rate) ) #likelihood function
+    theta.hat<-seq(0, 5, length.out = b)
+    l<-c()
+      for (i in 1:b){
+        l[i]<-L(theta.hat[i], x)  
+      }
+    #算出-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.05)
+    lambda_beta[j]<-L(rate,x)/L(theta.hat[which.max(l)],x)
+    if (-2*log(lambda_beta[j])<qchisq(0.95, 1)){
+      beta[j]<-1
+    }
+    else {
+      beta[j]<-0
+    }
+    betaP[o]<-mean(beta)
+  }
+  beta<-c()
+  j<-0
+}
+#算出betaP為犯型II錯誤的機率，1-betaP即為檢定力
+power<-1-betaP #p(reject H0 | Ha is true)
+#畫出當真實參數theta為不同值時，所對應的檢定力
+S=smooth.spline(s,power)
+likehood_power_rate_n1<-S
+plot(S,main = "power curve", ylab = "probability", xlab = "theta",type="l",col=2,lty=1)
+theta0_10<-which.min(power)
+s[theta0_10] #simulated theta
+rate #actual theta 
+#verify
+#算出alpha為犯型I錯誤的機率
+alpha_10<-c()
+for (k in 1:B) {
+  if (-2*log(lambda1[k])>=qchisq(0.95, 1)){
+    alpha_10[k]<-1
+  }
+  else {
+    alpha_10[k]<-0
+  }
+} # RR={-2*log(lambda)>=(chi-square(1)_alpha=0.01)=qchisq(0.95, 1)}
+mean(alpha_10) #0.05 , p(reject H0 | H0 is True)
+likehood_power_rate<-power
+
+#n=50
+lambda_beta<-c()
+b<-100
+s<-seq(1,3,length.out = b)
+beta<-c()
+betaP<-c()
+#模擬出b個likelihood function
+for (o in 1:b) {
+  for (j in 1:b) {
+    n<-50
+    rate<-2
+    x<-rexp(n,rate=s[o])
+    L<-function(rate, x) prod( dexp(x, rate) ) #likelihood function
+    theta.hat<-seq(0, 5, length.out = b)
+    l<-c()
+      for (i in 1:b){
+        l[i]<-L(theta.hat[i], x)  
+      }
+    #算出-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.05)
+    lambda_beta[j]<-L(rate,x)/L(theta.hat[which.max(l)],x)
+    if (-2*log(lambda_beta[j])<qchisq(0.95, 1)){
+      beta[j]<-1
+    }
+    else {
+      beta[j]<-0
+    }
+    betaP[o]<-mean(beta)
+  }
+  beta<-c()
+  j<-0
+}
+#算出betaP為犯型II錯誤的機率，1-betaP即為檢定力
+power<-1-betaP #p(reject H0 | Ha is true)
+#畫出當真實參數theta為不同值時，所對應的檢定力
+S=smooth.spline(s,power)
+likehood_power_rate_n2<-S
+lines(S,main = "power curve", ylab = "probability", xlab = "theta",type="l",col=3,lty=1,add=T)
+theta0_50<-which.min(power)
+s[theta0_50] #simulated theta
+rate #actual theta 
+#verify
+#算出alpha為犯型I錯誤的機率
+alpha_50<-c()
+for (k in 1:B) {
+  if (-2*log(lambda2[k])>=qchisq(0.95, 1)){
+    alpha_50[k]<-1
+  }
+  else {
+    alpha_50[k]<-0
+  }
+} # RR={-2*log(lambda)>=(chi-square(1)_alpha=0.01)=qchisq(0.95, 1)}
+mean(alpha_50) #0.05 , p(reject H0 | H0 is True)
+likehood_power_rate<-power
+
+#n=200
+lambda_beta<-c()
+b<-100
+s<-seq(1,3,length.out = b)
+beta<-c()
+betaP<-c()
+#模擬出b個likelihood function
+for (o in 1:b) {
+  for (j in 1:b) {
+    n<-200
+    rate<-2
+    x<-rexp(n,rate=s[o])
+    L<-function(rate, x) prod( dexp(x, rate) ) #likelihood function
+    theta.hat<-seq(0, 5, length.out = b)
+    l<-c()
+      for (i in 1:b){
+        l[i]<-L(theta.hat[i], x)  
+      }
+    #算出-2log(lambda)小於臨界值的機率(chi(1),顯著水準=0.05)
+    lambda_beta[j]<-L(rate,x)/L(theta.hat[which.max(l)],x)
+    if (-2*log(lambda_beta[j])<qchisq(0.95, 1)){
+      beta[j]<-1
+    }
+    else {
+      beta[j]<-0
+    }
+    betaP[o]<-mean(beta)
+  }
+  beta<-c()
+  j<-0
+}
+#算出betaP為犯型II錯誤的機率，1-betaP即為檢定力
+power<-1-betaP #p(reject H0 | Ha is true)
+#畫出當真實參數theta為不同值時，所對應的檢定力
+S=smooth.spline(s,power)
+likehood_power_rate_n3<-S
+lines(S,main = "power curve", ylab = "probability", xlab = "theta",type="l",col=4,lty=1,add=T)
+theta0_200<-which.min(power)
+s[theta0_200] #simulated theta
+rate #actual theta 
+#verify
+#算出alpha為犯型I錯誤的機率
+alpha_200<-c()
+for (k in 1:B) {
+  if (-2*log(lambda3[k])>=qchisq(0.95, 1)){
+    alpha_200[k]<-1
+  }
+  else {
+    alpha_200[k]<-0
+  }
+} # RR={-2*log(lambda)>=(chi-square(1)_alpha=0.01)=qchisq(0.95, 1)}
+mean(alpha_200) #0.05 , p(reject H0 | H0 is True)
+legend("topright",c("n=10","n=50","n=200"),col = c(2,3,4),lty = 1)
+
+
+```
+
+# Wald Test {id="wald"}
+
+<p class="font_style">Wald Test 的檢定統計量:$$\chi_w^2\sim[\sqrt{nI_1(\hat\theta)}(\hat\theta-\theta_0)]^2$$By MLE的大樣本定理:$$\sqrt{n}(\hat\theta-\theta_0)\stackrel{D}{\to}N(0,\frac{1}{I(\theta_0)})$$移項後可以得到:$$\hat\theta\stackrel{D}{\to}N(\theta_0,\frac{1}{nI(\theta_0)})$$藉由$Z=\frac{x-\mu}{\sigma}$故我們可以得到:$$Z=\frac{\hat\theta-\theta_0}{\sqrt{\frac{1}{nI_1(\theta_0)}}}$$再進行平方的話可以得到卡方，可以看出也就是wald test的統計量$$\chi_w^2\sim[\sqrt{nI_1(\hat\theta)}(\hat\theta-\theta_0)]^2$$</p>
+
+
+
+## Normal ditribution N(mu,1)
+```{r,cache=TRUE}
+par(mfrow=c(1,2))
+###N(mu,1)###
+set.seed(1234)
+#set the parameter
+B<-100
+n<-150
+mu<-2
+sigma1<-1 #sd
+
+#set the likelihood function and range
+L<-function(x_bar, x, sigma0=sigma1) prod( dnorm(x, mean=x_bar, sd=sigma0) ) #Likelihood
+theta.hat<-seq(1, 3, length.out = B) #set the range to search MLE
+
+```
+
+```{r,cache=TRUE}
+#different sample size
+theta.hat<-seq(1, 3, length.out =200)
+B<-1000
+n1<-10;n2<-50;n3<-200 #sample size
+MLE1<-rep(NA,B);MLE2<-rep(NA,B);MLE3<-rep(NA,B)
+fisher1<-rep(NA,B);fisher2<-rep(NA,B);fisher3<-rep(NA,B)   #I(theta)=E[((X-theta)/(sigma1^2))^2]
+W1<-rep(NA,B);W2<-rep(NA,B);W3<-rep(NA,B)
+for (i in 1:B) {
+  x1<-rnorm(n1,mean=mu,sd=sigma1)
+  x2<-rnorm(n2,mean=mu,sd=sigma1)
+  x3<-rnorm(n3,mean=mu,sd=sigma1)
+  likehood1<-lapply(theta.hat,function(s) L(x_bar=s,x=x1))
+  likehood2<-lapply(theta.hat,function(s) L(x_bar=s,x=x2)) 
+  likehood3<-lapply(theta.hat,function(s) L(x_bar=s,x=x3)) 
+  MLE1[i]<-theta.hat[which.max(likehood1)]             #find MLE
+  MLE2[i]<-theta.hat[which.max(likehood2)] 
+  MLE3[i]<-theta.hat[which.max(likehood3)] 
+  fisher1[i]<-mean(((x1-MLE1[i])/(sigma1^2))^2) #I(MLE)=E[((X-MLE)/(sigma1^2))^2]
+  fisher2[i]<-mean(((x2-MLE2[i])/(sigma1^2))^2)
+  fisher3[i]<-mean(((x3-MLE3[i])/(sigma1^2))^2)
+}
+
+#3.Limiting dist of MLE.
+#different sample size
+par(mfrow=c(1,3))
+plot(density(sqrt(n1)*(MLE1-mu)),main="Limiting distribution of MLE",xlab="",col=1,cex=1.5)
+lines(density(sqrt(n2)*(MLE2-mu)),col=3)
+lines(density(sqrt(n3)*(MLE3-mu)),col=4)
+curve(dnorm(x,0,sd=sigma1^2),col=2,add=T)      #N(0,1/I(mu=0)=sigma2^2)
+legend("topright",c("Simulation,n=10","Simulation,n=50","Simulation,n=200","Theoretical"),lty=1,col=c(1,3,4,2),cex = 0.5)
+
+#4.Transifrom to N(0,1) and Chi-square(1).
+Z1<-(sqrt(n1*fisher1)*(MLE1-mu))
+Z2<-(sqrt(n2*fisher2)*(MLE2-mu))
+Z3<-(sqrt(n3*fisher3)*(MLE3-mu))
+plot(density(Z1),main=expression(sqrt(n*Iota(hat(theta)))*(hat(theta)-theta)%->%N(0,1)),xlab="",col=1,cex=1.5)
+lines(density(Z2),col=3)
+lines(density(Z3),col=4)
+curve(dnorm(x,0,1),col=2,add=T)
+legend("topright",c("Simulation,n=10","Simulation,n=50","Simulation,n=200","Theoretical"),lty=1,col=c(1,3,4,2),cex = 0.5)
+
+W1<-(sqrt(n1*fisher1)*(MLE1-mu))^2
+W2<-(sqrt(n2*fisher2)*(MLE2-mu))^2
+W3<-(sqrt(n3*fisher3)*(MLE3-mu))^2
+plot(density(W1,from=0),main= expression((sqrt(n*Iota(hat(theta)))*(hat(theta)-theta))^2%->%X^2(1)),xlab="",col=1,cex=1.5)
+lines(density(W2,from=0),col=3)
+lines(density(W3,from=0),col=4)
+curve(dchisq(x,1),col=2,add=T)
+points(qchisq(0.95,1), 0, col=2, pch=16, cex=3)
+legend("topright",c("Simulation,n=10","Simulation,n=50","Simulation,n=200","Theoretical"),lty=1,col=c(1,3,4,2),cex = 0.5)
+```
+
+```{r,cache=TRUE}
+#different variance
+theta.hat<-seq(1, 3, length.out =200)
+B<-1000
+n<-50
+var1<-1;var2<-5;var3<-13 #sample variance
+MLE1<-rep(NA,B);MLE2<-rep(NA,B);MLE3<-rep(NA,B)
+fisher1<-rep(NA,B);fisher2<-rep(NA,B);fisher3<-rep(NA,B)   #I(theta)=E[((X-theta)/(sigma1^2))^2]
+W1<-rep(NA,B);W2<-rep(NA,B);W3<-rep(NA,B)
+for (i in 1:B) {
+  x1<-rnorm(n,mean=mu,sd=sqrt(var1))
+  x2<-rnorm(n,mean=mu,sd=sqrt(var2))
+  x3<-rnorm(n,mean=mu,sd=sqrt(var3))
+  likehood1<-lapply(theta.hat,function(s) L(x_bar=s,x=x1,sigma0=sqrt(var1)))
+  likehood2<-lapply(theta.hat,function(s) L(x_bar=s,x=x2,sigma0=sqrt(var2))) 
+  likehood3<-lapply(theta.hat,function(s) L(x_bar=s,x=x3,sigma0=sqrt(var3))) 
+  MLE1[i]<-theta.hat[which.max(likehood1)]             #find MLE
+  MLE2[i]<-theta.hat[which.max(likehood2)] 
+  MLE3[i]<-theta.hat[which.max(likehood3)] 
+  fisher1[i]<-mean(((x1-MLE1[i])/var1)^2)         #I(MLE)=E[((X-MLE)/(sigma1^2))^2]
+  fisher2[i]<-mean(((x2-MLE2[i])/var2)^2)
+  fisher3[i]<-mean(((x3-MLE3[i])/var3)^2)
+}
+
+#3.Limiting dist of MLE.
+#different sample size
+par(mfrow=c(1,3))
+plot(density(sqrt(n)*(MLE1-mu)),main="Limiting distribution of MLE",xlab="",col=1)
+curve(dnorm(x,0,sd=sqrt(var1)),col=2,add=T)      #N(0,1/I(mu=0)=sigma2^2)
+legend("topright",c("Simulation,var=1","Theoretical"),lty=1,col=c(1,2),cex=0.5)
+plot(density(sqrt(n)*(MLE2-mu)),main="Limiting distribution of MLE",xlab="",col=1)
+curve(dnorm(x,0,sd=sqrt(var2)),col=2,add=T)      #N(0,1/I(mu=0)=sigma2^2)
+legend("topright",c("Simulation,var=5","Theoretical"),lty=1,col=c(1,2),cex=0.5)
+plot(density(sqrt(n)*(MLE3-mu)),main="Limiting distribution of MLE",xlab="",col=1)
+curve(dnorm(x,0,sd=sqrt(var3)),col=2,add=T)      #N(0,1/I(mu=0)=sigma2^2)
+legend("topright",c("Simulation,var=13","Theoretical"),lty=1,col=c(1,2),cex = 0.5)
+
+#4.Transifrom to N(0,1) and Chi-square(1).
+par(mfrow=c(1,2))
+Z1<-(sqrt(n*fisher1)*(MLE1-mu))
+Z2<-(sqrt(n*fisher2)*(MLE2-mu))
+Z3<-(sqrt(n*fisher3)*(MLE3-mu))
+plot(density(Z1),main=expression(sqrt(n*Iota(hat(theta)))*(hat(theta)-theta)%->%N(0,1)),xlab="",col=1,ylim=c(0,0.5))
+lines(density(Z2),col=3)
+lines(density(Z3),col=4)
+curve(dnorm(x,0,1),col=2,add=T)
+legend("topright",c("Simulation,var=1","Simulation,var=5","Simulation,var=13","Theoretical"),lty=1,col=c(1,3,4,2),cex=0.5)
+
+W1<-(sqrt(n*fisher1)*(MLE1-mu))^2
+W2<-(sqrt(n*fisher2)*(MLE2-mu))^2
+W3<-(sqrt(n*fisher3)*(MLE3-mu))^2
+plot(density(W1,from=0),main= expression((sqrt(n*Iota(hat(theta)))*(hat(theta)-theta))^2%->%X^2(1)),xlab="",col=1)
+lines(density(W2,from=0),col=3)
+lines(density(W3,from=0),col=4)
+curve(dchisq(x,1),col=2,add=T)
+points(qchisq(0.95,1), 0, col=2, pch=16, cex=3)
+legend("topright",c("Simulation,var=1","Simulation,var=5","Simulation,var=13","Theoretical"),lty=1,col=c(1,3,4,2),cex=0.5)
+```
+
+```{r,cache=TRUE}
+par(mfrow=c(1,2))
+#5.Power curve
+#diferent sample size
+B<-100
+n1<-10;n2<-50;n3<-200 #sample size
+theta.hat<-seq(1, 3, length.out =100)
+W1<-rep(NA,B);W2<-rep(NA,B);W3<-rep(NA,B)
+power1<-rep(NA,B);power2<-rep(NA,B);power3<-rep(NA,B)    #p(W>qchisq(0.95,1) | H1)
+range<-seq(0, 4, length.out = 2*B)   #range of searching mle
+for (j in 1:B){
+  H1_mu<-theta.hat[j]
+  for (i in 1:B) {
+    x1<-rnorm(n1,mean=H1_mu,sd=sigma1)
+    x2<-rnorm(n2,mean=H1_mu,sd=sigma1)
+    x3<-rnorm(n3,mean=H1_mu,sd=sigma1)
+    likehood1<-lapply(range,function(s) L(x_bar=s,x=x1))
+    likehood2<-lapply(range,function(s) L(x_bar=s,x=x2)) 
+    likehood3<-lapply(range,function(s) L(x_bar=s,x=x3)) 
+    MLE1<-range[which.max(likehood1)]                     #find MLE
+    MLE2<-range[which.max(likehood2)]
+    MLE3<-range[which.max(likehood3)]
+    fisher1<-mean(((x1-MLE1)/(sigma1^2))^2)        #I(MLE)=E[((X-MLE)/(sigma1^2))^2]
+    fisher2<-mean(((x2-MLE2)/(sigma1^2))^2) 
+    fisher3<-mean(((x3-MLE3)/(sigma1^2))^2) 
+    W1[i]<-(sqrt(n1*fisher1)*(MLE1-mu))^2
+    W2[i]<-(sqrt(n2*fisher2)*(MLE2-mu))^2
+    W3[i]<-(sqrt(n3*fisher3)*(MLE3-mu))^2
+  }
+  power1[j]<-mean(W1>qchisq(0.95,1))
+  power2[j]<-mean(W2>qchisq(0.95,1))
+  power3[j]<-mean(W3>qchisq(0.95,1))
+}
+smoothingSpline1 = smooth.spline(theta.hat,power1)
+smoothingSpline2 = smooth.spline(theta.hat,power2)
+smoothingSpline3 = smooth.spline(theta.hat,power3)
+plot(smoothingSpline1,col=3,type='l',main="Power Curve",xlab="mu",ylab="power",xlim=c(0,5))
+lines(smoothingSpline2,col=4)
+lines(smoothingSpline3,col=5)
+legend("topright",c("n=10","n=50","n=200"),lty=1,col=c(3,4,5),cex = 0.5)
+wald_power_mu_n1<-smoothingSpline1
+wald_power_mu_n2<-smoothingSpline2 
+wald_power_mu_n3<-smoothingSpline3
+
+
+#5.Power curve
+#diferent sample variance
+B<-100
+n<-50
+var1<-1;var2<-5;var3<-13 #sample variance
+theta.hat<-seq(1, 3, length.out =100)
+W1<-rep(NA,B);W2<-rep(NA,B);W3<-rep(NA,B)
+power1<-rep(NA,B);power2<-rep(NA,B);power3<-rep(NA,B)    #p(W>qchisq(0.95,1) | H1)
+range<-seq(0, 4, length.out = 2*B)   #range of searching mle
+for (j in 1:B){
+  H1_mu<-theta.hat[j]
+  for (i in 1:B) {
+    x1<-rnorm(n,mean=H1_mu,sd=sqrt(var1))
+    x2<-rnorm(n,mean=H1_mu,sd=sqrt(var2))
+    x3<-rnorm(n,mean=H1_mu,sd=sqrt(var3))
+    likehood1<-lapply(range,function(s) L(x_bar=s,x=x1,sigma0=sqrt(var1)))
+    likehood2<-lapply(range,function(s) L(x_bar=s,x=x2,sigma0=sqrt(var2))) 
+    likehood3<-lapply(range,function(s) L(x_bar=s,x=x3,sigma0=sqrt(var3))) 
+    MLE1<-range[which.max(likehood1)]                     #find MLE
+    MLE2<-range[which.max(likehood2)]
+    MLE3<-range[which.max(likehood3)]
+    fisher1<-mean(((x1-MLE1)/var1)^2)        #I(MLE)=E[((X-MLE)/(sigma1^2))^2]
+    fisher2<-mean(((x2-MLE2)/var2)^2) 
+    fisher3<-mean(((x3-MLE3)/var3)^2) 
+    W1[i]<-(sqrt(n*fisher1)*(MLE1-mu))^2
+    W2[i]<-(sqrt(n*fisher2)*(MLE2-mu))^2
+    W3[i]<-(sqrt(n*fisher3)*(MLE3-mu))^2
+  }
+  power1[j]<-mean(W1>qchisq(0.95,1))
+  power2[j]<-mean(W2>qchisq(0.95,1))
+  power3[j]<-mean(W3>qchisq(0.95,1))
+}
+smoothingSpline1 = smooth.spline(theta.hat,power1)
+smoothingSpline2 = smooth.spline(theta.hat,power2)
+smoothingSpline3 = smooth.spline(theta.hat,power3)
+plot(smoothingSpline1,col=3,type='l',main="Power Curve",xlab="mu",ylab="power",ylim=c(0,1),xlim=c(0,5))
+lines(smoothingSpline2,col=4)
+lines(smoothingSpline3,col=5)
+legend("topright",c("var=1","var=5","var=13"),lty=1,col=c(3,4,5),cex = 0.5)
+wald_power_mu_var1<-smoothingSpline1
+wald_power_mu_var2<-smoothingSpline2
+wald_power_mu_var3<-smoothingSpline3
+```
+
+
+## Normal ditribution N(1,sigma2)
+```{r,cache=TRUE}
+###N(1,sigma2)###
+#set the parameter
+B<-100
+n<-150
+mu<-1
+sigma2<-0.81
+#set the likelihood function and range
+L<-function(s2, x, mu0=mu) prod(dnorm(x, mean=mu0, sd=sqrt(s2))) #likelyhood of var
+theta.hat<-seq(0.1, 1.5, length.out = B) #set the range to search MLE
+
+```
+
+```{r,cache=TRUE}
+#different sample size
+theta.hat<-seq(0, 1.5, length.out =200)
+B<-1000
+n1<-10;n2<-50;n3<-200 #sample size
+MLE1<-rep(NA,B);MLE2<-rep(NA,B);MLE3<-rep(NA,B)
+fisher1<-rep(NA,B);fisher2<-rep(NA,B);fisher3<-rep(NA,B)   #I(theta)=E[((X-1)^2/(2*theta)-1/(2*theta))^2]
+W1<-rep(NA,B);W2<-rep(NA,B);W3<-rep(NA,B)
+for (i in 1:B) {
+  x1<-rnorm(n1,mean=mu,sd=sqrt(sigma2))
+  x2<-rnorm(n2,mean=mu,sd=sqrt(sigma2))
+  x3<-rnorm(n3,mean=mu,sd=sqrt(sigma2))
+  likehood1<-lapply(theta.hat,function(s) L(s,x=x1)) 
+  likehood2<-lapply(theta.hat,function(s) L(s,x=x2)) 
+  likehood3<-lapply(theta.hat,function(s) L(s,x=x3)) 
+  MLE1[i]<-theta.hat[which.max(likehood1)]          #find MLE
+  MLE2[i]<-theta.hat[which.max(likehood2)]
+  MLE3[i]<-theta.hat[which.max(likehood3)]
+  fisher1[i]<-mean(((x1-mu)^2/(2*MLE1[i]^2)-1/(2*MLE1[i]))^2)    #I(MLE)=E[((X-1)^2/(2*MLE^2)-1/(2*MLE))^2]
+  fisher2[i]<-mean(((x2-mu)^2/(2*MLE2[i]^2)-1/(2*MLE2[i]))^2)
+  fisher3[i]<-mean(((x3-mu)^2/(2*MLE3[i]^2)-1/(2*MLE3[i]))^2)
+}
+
+#3.Limiting dist of MLE.
+#different sample size
+par(mfrow=c(1,3))
+plot(density(sqrt(n1)*(MLE1-sigma2)),main="Limiting distribution of MLE",xlab="",col=1)
+lines(density(sqrt(n2)*(MLE2-sigma2)),col=3)
+lines(density(sqrt(n3)*(MLE3-sigma2)),col=4)
+curve(dnorm(x,0,sd=sqrt(2*sigma2^2)),col=2,add=T)  #N(0,1/I(sigma^2=1)=2sigma^2)
+legend("topright",c("Simulation,n=10","Simulation,n=50","Simulation,n=200","Theoretical"),lty=1,col=c(1,3,4,2),cex = 0.5)
+
+#4.Transifrom to N(0,1) and chi-square.
+Z1<-sqrt(n1*fisher1)*(MLE1-sigma2)
+Z2<-sqrt(n2*fisher2)*(MLE2-sigma2)
+Z3<-sqrt(n3*fisher3)*(MLE3-sigma2)
+plot(density(Z1),main=expression(sqrt(n*Iota(hat(theta)))*(hat(theta)-theta)%->%N(0,1)),xlab="",xlim=c(-5,5))
+lines(density(Z2),col=3)
+lines(density(Z3),col=4)
+curve(dnorm(x,0,1),col="red",add=T)
+legend("topright",c("Simulation,n=10","Simulation,n=50","Simulation,n=200","Theoretical"),lty=1,col=c(1,3,4,2),cex=0.5)
+
+W1<-(sqrt(n1*fisher1)*(MLE1-sigma2))^2
+W2<-(sqrt(n2*fisher2)*(MLE2-sigma2))^2
+W3<-(sqrt(n3*fisher3)*(MLE3-sigma2))^2
+plot(density(W1,from=0),main= expression((sqrt(n*Iota(hat(theta)))*(hat(theta)-theta))^2%->%X^2(1)),xlab="",col=1,xlim=c(0,20))
+lines(density(W2,from=0),col=3)
+lines(density(W3,from=0),col=4)
+curve(dchisq(x,1),col="red",add=T)
+points(qchisq(0.95,1), 0, col=2, pch=16, cex=3)
+legend("topright",c("Simulation,n=10","Simulation,n=50","Simulation,n=200","Theoretical"),lty=1,col=c(1,3,4,2),cex = 0.5)
+```
+
+```{r,cache=TRUE}
+#different mean
+theta.hat<-seq(0, 1.5, length.out =200)
+B<-1000
+n<-50
+mu1<-1;mu2<-5;mu3<--3  #mean
+MLE1<-rep(NA,B);MLE2<-rep(NA,B);MLE3<-rep(NA,B)
+fisher1<-rep(NA,B);fisher2<-rep(NA,B);fisher3<-rep(NA,B)   #I(theta)=E[((X-1)^2/(2*theta)-1/(2*theta))^2]
+W1<-rep(NA,B);W2<-rep(NA,B);W3<-rep(NA,B)
+for (i in 1:B) {
+  x1<-rnorm(n,mean=mu1,sd=sqrt(sigma2))
+  x2<-rnorm(n,mean=mu2,sd=sqrt(sigma2))
+  x3<-rnorm(n,mean=mu3,sd=sqrt(sigma2))
+  likehood1<-lapply(theta.hat,function(s) L(s,x=x1,mu0=mu1)) 
+  likehood2<-lapply(theta.hat,function(s) L(s,x=x2,mu0=mu2)) 
+  likehood3<-lapply(theta.hat,function(s) L(s,x=x3,mu0=mu3)) 
+  MLE1[i]<-theta.hat[which.max(likehood1)]          #find MLE
+  MLE2[i]<-theta.hat[which.max(likehood2)]
+  MLE3[i]<-theta.hat[which.max(likehood3)]
+  fisher1[i]<-mean(((x1-mu1)^2/(2*MLE1[i]^2)-1/(2*MLE1[i]))^2)    #I(MLE)=E[((X-1)^2/(2*MLE^2)-1/(2*MLE))^2]
+  fisher2[i]<-mean(((x2-mu2)^2/(2*MLE2[i]^2)-1/(2*MLE2[i]))^2)
+  fisher3[i]<-mean(((x3-mu3)^2/(2*MLE3[i]^2)-1/(2*MLE3[i]))^2)
+}
+
+#3.Limiting dist of MLE.
+#different variance
+par(mfrow=c(1,3))
+plot(density(sqrt(n)*(MLE1-sigma2)),main="Limiting distribution of MLE.",xlab="",col=1)
+lines(density(sqrt(n)*(MLE2-sigma2)),col=3)
+lines(density(sqrt(n)*(MLE3-sigma2)),col=4)
+curve(dnorm(x,0,sd=sqrt(2*sigma2^2)),col=2,add=T)  #N(0,1/I(sigma^2=1)=2sigma^2)
+legend("topright",c("Simulation,mu=1","Simulation,mu=5","Simulation,mu=-3","Theoretical"),lty=1,col=c(1,3,4,2),cex=0.5)
+
+#4.Transifrom to N(0,1) and chi-square.
+Z1<-sqrt(n*fisher1)*(MLE1-sigma2)
+Z2<-sqrt(n*fisher2)*(MLE2-sigma2)
+Z3<-sqrt(n*fisher3)*(MLE3-sigma2)
+plot(density(Z1),main=expression(sqrt(n*Iota(hat(theta)))*(hat(theta)-theta)%->%N(0,1)),xlab="",xlim=c(-5,5))
+lines(density(Z2),col=3)
+lines(density(Z3),col=4)
+curve(dnorm(x,0,1),col="red",add=T)
+legend("topright",c("Simulation,mu=1","Simulation,mu=5","Simulation,mu=-3","Theoretical"),lty=1,col=c(1,3,4,2),cex = 0.5)
+
+W1<-(sqrt(n*fisher1)*(MLE1-sigma2))^2
+W2<-(sqrt(n*fisher2)*(MLE2-sigma2))^2
+W3<-(sqrt(n*fisher3)*(MLE3-sigma2))^2
+plot(density(W1,from=0),main=expression((sqrt(n*Iota(hat(theta)))*(hat(theta)-theta))^2%->%X^2(1)),xlab="",col=1,xlim=c(0,20))
+lines(density(W2,from=0),col=3)
+lines(density(W3,from=0),col=4)
+curve(dchisq(x,1),col="red",add=T)
+points(qchisq(0.95,1), 0, col=2, pch=16, cex=3)
+legend("topright",c("Simulation,mu=1","Simulation,mu=5","Simulation,mu=-3","Theoretical"),lty=1,col=c(1,3,4,2),cex = 0.5)
+```
+
+```{r,cache=TRUE}
+par(mfrow=c(1,2))
+#5.Power curve.
+#different sample size
+B<-100
+n1<-10;n2<-50;n3<-200 #sample size
+theta.hat<-seq(0.2, 2, length.out =100)
+W1<-rep(NA,B);W2<-rep(NA,B);W3<-rep(NA,B)
+power1<-rep(NA,B);power2<-rep(NA,B);power3<-rep(NA,B)   #p(W>qchisq(0.95,1) | H1)
+range<-seq(0.1, 4, length.out = 2*B)   #range of searching mle
+for (j in 1:B){
+  H1_sigma<-theta.hat[j]
+  for (i in 1:B) {
+    x1<-rnorm(n1,mean=mu,sd=sqrt(H1_sigma))
+    x2<-rnorm(n2,mean=mu,sd=sqrt(H1_sigma))
+    x3<-rnorm(n3,mean=mu,sd=sqrt(H1_sigma))
+    likehood1<-lapply(range,function(s2) L(s2,x=x1))
+    likehood2<-lapply(range,function(s2) L(s2,x=x2))
+    likehood3<-lapply(range,function(s2) L(s2,x=x3))
+    MLE1<-range[which.max(likehood1)]               #find MLE
+    MLE2<-range[which.max(likehood2)]
+    MLE3<-range[which.max(likehood3)]
+    fisher1<-mean(((x1-mu)^2/(2*MLE1^2)-1/(2*MLE1))^2) #I(MLE)=E[((X-0)^2/(2*MLE)-1/(2*MLE))^2]
+    fisher2<-mean(((x2-mu)^2/(2*MLE2^2)-1/(2*MLE2))^2)
+    fisher3<-mean(((x3-mu)^2/(2*MLE3^2)-1/(2*MLE3))^2)
+    W1[i]<-(sqrt(n1*fisher1)*(MLE1-sigma2))^2
+    W2[i]<-(sqrt(n2*fisher2)*(MLE2-sigma2))^2
+    W3[i]<-(sqrt(n3*fisher3)*(MLE3-sigma2))^2
+  }
+  power1[j]<-mean(W1>qchisq(0.95,1))
+  power2[j]<-mean(W2>qchisq(0.95,1))
+  power3[j]<-mean(W3>qchisq(0.95,1))
+}
+smoothingSpline1 = smooth.spline(theta.hat,power1)
+smoothingSpline2 = smooth.spline(theta.hat,power2)
+smoothingSpline3 = smooth.spline(theta.hat,power3)
+plot(smoothingSpline1,col=3,type='l',main="Power Curve",xlab="sigma2",ylab="power",xlim=c(0.1,4))
+lines(smoothingSpline2,col=4)
+lines(smoothingSpline3,col=5)
+legend("topright",c("Simulation,n=10","Simulation,n=50","Simulation,n=200"),lty=1,col=c(3,4,5),cex = 0.5)
+wald_power_var_n1<-smoothingSpline1
+wald_power_var_n2<-smoothingSpline2
+wald_power_var_n3<-smoothingSpline3
+
+#5.Power curve.
+#different mean
+B<-100
+n<-50
+mu1<-1;mu2<-5;mu3<--3  #mean
+theta.hat<-seq(0.2, 2, length.out =100)
+W1<-rep(NA,B);W2<-rep(NA,B);W3<-rep(NA,B)
+power1<-rep(NA,B);power2<-rep(NA,B);power3<-rep(NA,B)   #p(W>qchisq(0.95,1) | H1)
+range<-seq(0.1, 4, length.out = 2*B)   #range of searching mle
+for (j in 1:B){
+  H1_sigma<-theta.hat[j]
+  for (i in 1:B) {
+    x1<-rnorm(n,mean=mu1,sd=sqrt(H1_sigma))
+    x2<-rnorm(n,mean=mu2,sd=sqrt(H1_sigma))
+    x3<-rnorm(n,mean=mu3,sd=sqrt(H1_sigma))
+    likehood1<-lapply(range,function(s2) L(s2,x=x1,mu0=mu1))
+    likehood2<-lapply(range,function(s2) L(s2,x=x2,mu0=mu2))
+    likehood3<-lapply(range,function(s2) L(s2,x=x3,mu0=mu3))
+    MLE1<-range[which.max(likehood1)]               #find MLE
+    MLE2<-range[which.max(likehood2)]
+    MLE3<-range[which.max(likehood3)]
+    fisher1<-mean(((x1-mu1)^2/(2*MLE1^2)-1/(2*MLE1))^2) #I(MLE)=E[((X-mu)^2/(2*MLE)-1/(2*MLE))^2]
+    fisher2<-mean(((x2-mu2)^2/(2*MLE2^2)-1/(2*MLE2))^2)
+    fisher3<-mean(((x3-mu3)^2/(2*MLE3^2)-1/(2*MLE3))^2)
+    W1[i]<-(sqrt(n*fisher1)*(MLE1-sigma2))^2
+    W2[i]<-(sqrt(n*fisher2)*(MLE2-sigma2))^2
+    W3[i]<-(sqrt(n*fisher3)*(MLE3-sigma2))^2
+  }
+  power1[j]<-mean(W1>qchisq(0.95,1))
+  power2[j]<-mean(W2>qchisq(0.95,1))
+  power3[j]<-mean(W3>qchisq(0.95,1))
+}
+smoothingSpline1 = smooth.spline(theta.hat,power1)
+smoothingSpline2 = smooth.spline(theta.hat,power2)
+smoothingSpline3 = smooth.spline(theta.hat,power3)
+plot(smoothingSpline1,col=3,type='l',main="Power Curve",xlab="sigma2",ylab="power",xlim=c(0.1,4))
+lines(smoothingSpline2,col=4)
+lines(smoothingSpline3,col=5)
+legend("topright",c("Simulation,mu=1","Simulation,mu=5","Simulation,mu=-3"),lty=1,col=c(3,4,5),cex = 0.5)
+wald_power_var_mean1<-smoothingSpline1
+wald_power_var_mean2<-smoothingSpline2
+wald_power_var_mean3<-smoothingSpline3
+```
+
+
+## Exponential distribution exp(rate)
+```{r,cache=TRUE}
+par(mfrow=c(2,2))
+#set the parameter
+B<-100
+n<-150
+rate<-2
+#set the likelihood function and range
+L<-function(r, x) prod( dexp(x,rate = r) ) #Likelyhood
+theta.hat<-seq(1,3, length.out = B)#set the range to search MLE #rate !
+```
+
+```{r,cache=TRUE}
+#different sample size
+theta.hat<-seq(1, 3, length.out = 100)
+B<-1000
+n1<-10;n2<-50;n3<-200 #sample size
+MLE1<-rep(NA,B);MLE2<-rep(NA,B);MLE3<-rep(NA,B)
+fisher1<-rep(NA,B);fisher2<-rep(NA,B);fisher3<-rep(NA,B)   ##I(theta)=E[((-x+1/theta)^2] 
+W1<-rep(NA,B);W2<-rep(NA,B);W3<-rep(NA,B)
+for (i in 1:B) {
+  x1<-rexp(n1,rate=rate)
+  x2<-rexp(n2,rate=rate)
+  x3<-rexp(n3,rate=rate)
+  likehood1<-lapply(theta.hat,function(r) L(r,x=x1))
+  likehood2<-lapply(theta.hat,function(r) L(r,x=x2))
+  likehood3<-lapply(theta.hat,function(r) L(r,x=x3))
+  MLE1[i]<-theta.hat[which.max(likehood1)]            #find MLE
+  MLE2[i]<-theta.hat[which.max(likehood2)]
+  MLE3[i]<-theta.hat[which.max(likehood3)]
+  fisher1[i]<-mean((-x1+1/MLE1[i])^2)                  #I(MLE)=E[((-x+1)/MLE)^2]
+  fisher2[i]<-mean((-x2+1/MLE2[i])^2)
+  fisher3[i]<-mean((-x3+1/MLE3[i])^2)
+}
+#3.Limiting dist of MLE.
+#different sample size
+par(mfrow=c(1,3))
+plot(density(sqrt(n1)*(MLE1-rate)),main="Limiting distritution of MLE.",xlab="",col=1) 
+lines(density(sqrt(n2)*(MLE2-rate)),col=3) 
+lines(density(sqrt(n3)*(MLE3-rate)),col=4) 
+curve(dnorm(x,0,sd=sqrt(rate^2)),col=2,add=T) #N(0,1/I(rate=1)=rate^2)
+legend("topleft",c("Simulation,n=10","Simulation,n=50","Simulation,n=200","Theoretical"),lty=1,col=c(1,3,4,2),cex=0.5)
+
+#4.Transifrom to N(0,1) and Chi-square(1).
+Z1<-sqrt(n1*fisher1)*(MLE1-rate)
+Z2<-sqrt(n2*fisher2)*(MLE2-rate)
+Z3<-sqrt(n3*fisher3)*(MLE3-rate)
+plot(density(Z1),xlab="",main=expression(sqrt(n*Iota(hat(theta)))*(hat(theta)-theta)%->%N(0,1)),col=1)
+lines(density(Z2),col=3)
+lines(density(Z3),col=4)
+curve(dnorm(x,0,1),col=2,add=T)
+legend("topleft",c("Simulation,n=10","Simulation,n=50","Simulation,n=200","Theoretical"),lty=1,col=c(1,3,4,2),cex=0.5)
+
+W1<-(sqrt(n1*fisher1)*(MLE1-rate))^2
+W2<-(sqrt(n2*fisher2)*(MLE2-rate))^2
+W3<-(sqrt(n3*fisher3)*(MLE3-rate))^2
+plot(density(W1,from=0),xlab="",main=expression((sqrt(n*Iota(hat(theta)))*(hat(theta)-theta))^2%->%X^2(1)),col=1)
+lines(density(W2,from=0),col=3)
+lines(density(W3,from=0),col=4)
+curve(dchisq(x,1),col=2,add=T)
+points(qchisq(0.95,1), 0, col=2, pch=16, cex=3)
+legend("topright",c("Simulation,n=10","Simulation,n=50","Simulation,n=200","Theoretical"),lty=1,col=c(1,3,4,2),cex = 0.5)
+
+```
+
+```{r,cache=TRUE}
+#5.Power curve
+B<-100
+n1<-10;n2<-50;n3<-200 #sample size
+theta.hat<-seq(1, 3, length.out = B)
+range<-seq(0.1, 4, length.out = 2*B) #range of searching mle
+W1<-rep(NA,B);W2<-rep(NA,B);W3<-rep(NA,B)
+power1<-rep(NA,B);power2<-rep(NA,B);power3<-rep(NA,B);  #p(W>qchisq(0.95,1) | H1)
+for (j in 1:B){
+  H1_rate<-theta.hat[j]
+  for (i in 1:B) {
+    x1<-rexp(n1,rate=H1_rate)
+    x2<-rexp(n2,rate=H1_rate)
+    x3<-rexp(n3,rate=H1_rate)
+    likehood1<-lapply(range,function(r) L(r,x=x1)) #find MLE
+    likehood2<-lapply(range,function(r) L(r,x=x2))
+    likehood3<-lapply(range,function(r) L(r,x=x3))
+    MLE1<-range[which.max(likehood1)]
+    MLE2<-range[which.max(likehood2)]
+    MLE3<-range[which.max(likehood3)]
+    fisher1<-mean((-x1+1/MLE1)^2)  #I(MLE)=E[((-x+1/MLE)^2] 
+    fisher2<-mean((-x2+1/MLE2)^2)
+    fisher3<-mean((-x3+1/MLE3)^2)
+    W1[i]<-(sqrt(n1*fisher1)*(MLE1-rate))^2
+    W2[i]<-(sqrt(n2*fisher2)*(MLE2-rate))^2
+    W3[i]<-(sqrt(n3*fisher3)*(MLE3-rate))^2
+  }
+  power1[j]<-mean(W1>qchisq(0.95,1))
+  power2[j]<-mean(W2>qchisq(0.95,1))
+  power3[j]<-mean(W3>qchisq(0.95,1))
+}
+smoothingSpline1 = smooth.spline(theta.hat,power1)
+smoothingSpline2 = smooth.spline(theta.hat,power2)
+smoothingSpline3 = smooth.spline(theta.hat,power3)
+plot(smoothingSpline1,col=3,type='l',main="Power Curve",xlab="rate",ylab="power",xlim=c(0,5))
+lines(smoothingSpline2,col=4)
+lines(smoothingSpline3,col=5)
+legend("topright",c("Simulation,n=10","Simulation,n=50","Simulation,n=200"),lty=1,col=c(3,4,5),cex = 0.5)
+wald_power_rate_n1<-smoothingSpline1
+wald_power_rate_n2<-smoothingSpline2
+wald_power_rate_n3<-smoothingSpline3
+```
+
+
+# Score Test
+<p class="font_style">我們能注意到 Wald 檢定使用的二次近似方程式是在 MLE，也就是 Likelihood Ratio 極大時的點 $\theta_0$ 和 Log Likelihood Ratio 取相同的值和相同曲率 (二次導函數，即$E(l''(\theta))$ )。 可以類比的是，Score 檢定是基於另一種二次方程模擬，計算上也比較簡單，算是 Wald 檢定的延伸。</p>
+  
+<p class="font_style">Score 檢定的二次近似方程式和 Log Likelihood Ratio 在虛無假設$H_0:\theta=\theta_0$ 時取相同的曲率。所以，Score 檢定使用的近似方程在 $\theta=\theta_0$ 時和 Log Likelihood Ratio 在相同位置時的傾斜度 (一階導數)，和曲率 (坡度的變化程度，二階導數)相同。所以令 $U$ 爲 Log Likelihood Ratio 在 $\theta=\theta_0$時的坡度，定義 $V$ 是 Log Likelihood Ratio 在 $\theta=\theta_0$時的曲率的負數：$$\begin{aligned}
+& U=l'(\theta)|_{\theta=\theta_0}=l'(\theta_0)\\
+& V=-E[l''(\theta)]|_{\theta=\theta_0}=-E[l''(\theta_0)]=nI_1(\theta_0)=I_n(\theta_0)
+\end{aligned}$$</p>
+
+<p class="font_style">$$log\Lambda(\theta)\approx q(\theta)=-\frac{1}{2}\bigg(\frac{\hat\theta-\theta}{SD_{\hat\theta}}\bigg)^2\,\text{ asymptotically}$$則在此即能說明$$\begin{aligned}
+& q^\prime(\theta)                      =\frac{\hat\theta-\theta}{SD_{\hat\theta}^2}\ \Rightarrow\  q^\prime(\theta_0)        =\frac{\hat\theta-\theta_0}{SD_{\hat\theta}^2}\\ 
+\\
+& q^{\prime\prime}(\theta)              =-\frac{1}{SD_{\hat\theta}^2}\ \Rightarrow \  q^{\prime\prime}(\theta_0)=E[l^{\prime\prime}(\theta_0)]\ \Rightarrow \  \frac{1}{SD_{\hat\theta}^2}             =-E[l^{\prime\prime}(\theta_0)]=V\\
+\\
+& q^\prime(\theta_0)                    = \frac{\hat\theta-\theta_0}{SD_{\hat\theta}^2} = -E[l^{\prime\prime}(\theta_0)](\hat\theta-\theta_0)\stackrel{P}{\to} l^\prime(\theta_0)\quad\big(\,\text{by Collary 6.2.3 on your textbook !!}\,\big)\\
+& \Rightarrow\      \hat\theta-\theta_0  \stackrel{P}{\to} -\frac{l^\prime(\theta_0)}{E[l^{\prime\prime}(\theta_0)]}\ \Rightarrow \     \hat\theta  \stackrel{P}{\to}  -\frac{l^\prime(\theta_0)}{E[l^{\prime\prime}(\theta_0)]}+\theta_0\\
+\\
+& q(\theta)=-\frac{1}{2{SD_{\hat\theta}^2}}(\hat\theta-\theta)^2\approx \frac{E[l^{\prime\prime}(\theta_0)]}{2}(-\frac{l^\prime(\theta_0)}{E[l^{\prime\prime}(\theta_0)]}+\theta_0-\theta)^2=-\frac{V}{2}(\frac{U}{V}+\theta_0-\theta)^2
+\\
+\\
+\end{aligned}$$</p>
+
+
+
+
+<p class="font_style">$$\text{When}\quad\theta\to\theta_0\,,\quad q(\theta_0)\approx -\frac{V}{2}(\frac{U}{V})^2=-\frac{U^2}{2V}
+\\$$因此我們得到 Score Test 的檢定統計量在 $Under\,H_0:\theta=\theta_0$ 時為
+$$\chi^2_R=\frac{U^2}{V}=\frac{(l'(\theta_0))^2}{I_n(\theta_0)}\approx -2q(\theta_0) \sim\mathcal{X}_1^2
+\\
+\\$$$$\text{Or equivalently},\quad  \frac{U}{\sqrt{V}} \sim N(0,1)$$</p>
+
+
+---
+
+* Score 檢驗**優點**：
+  + 比 LRT 簡單
+  + 不需要計算 MLE，只需要計算零假設時的對數似然比方程之坡度和曲率
+  + 在流行病學用到的檢驗方法中最常用，也最容易擴展 (Mantel-Haenszel test, log rank test, generalised linear models such as logistic, Poisson, Cox regressions)。
+
+* Score 檢驗**缺點**：
+  + 和 Wald 檢驗一樣用到了兩次近似
+  + 無法總是保證這是最佳檢驗統計量
+  + 參數如果被變數變換， p值會跟着變化。
+  
+
+---
+
+
+
+![Score 檢定示意圖 https://bookdown.org/ccwang/medical_statistics6/img/Selection_084.png](https://bookdown.org/ccwang/medical_statistics6/img/Selection_084.png){width=85%}
+
+##  RCLB性質之證明
+$$Var(Y)\geq \frac{k'(\theta)}{I_n(\theta)}=RCLB(\theta)$$
+
+$$which\quad Y=u(X_1,X_2,...,X_n)\,,\quad E(Y)=k(\theta)\quad\big(\,i.e.  \text{Y is an unbiased estimator of}\;\theta \,\big)\
+\\
+\quad k'(\theta)=E(YZ)\,,\quad Z=\frac{\partial}{\partial \theta} logL(X;\theta)$$
+
+<p class="font_style">以下舉$N(\theta,1)$為例:</p>
+$$\hat\theta_{MLE}=\bar{X}=\;\stackrel{\sim}{\theta}=k(\theta) $$
+
+```{r,cache=TRUE}
+n<-100   # num of random sample
+R<-2000   # num of simulation times
+B<-1000  # num of possible theta
+xx<-seq(-1, 5, length.out = B)
+logLf<-function(x,theta) log(prod( dnorm(x,mean=theta,sd=1) ))
+rnormdf<-matrix(rnorm(n*R,mean=2,sd=1), n, R) 
+xa<-rnormdf[,1]
+ly<-lydiff<-matrix(NA,R,B)
+theta_MLE<-lydiffi<-c()
+for(j in 1:R){
+  xa<-rnormdf[,j]
+  for(i in 1:B){
+    ly[j,i]<-logLf(x=xa,theta=xx[i])
+  }
+  theta_MLE[j]<-xx[which.max(ly[j,])]
+  spl <- smooth.spline(ly[j,] ~ xx)
+  for(i in 1:B){
+    lydiff[j,i] <- predict(spl, x=xx[i], deriv=1)$y
+  }
+}
+#mean(lydiff);0  
+
+Y<-colSums(rnormdf)/n  #xbar (n個x_i的總平均)
+Z<-rowSums(lydiff)/B
+var(Z);100  #In(θ)
+ktheta_diff<-mean(Y*Z)
+RCLB<-(ktheta_diff^2)/100
+RCLB;1/100
+var(theta_MLE);1/n
+effeciency<-RCLB/var(theta_MLE)
+effeciency
+```
+
+##  Normal Distribution N(mu,1) 
+
+###  我們知道
+$$\hat\theta_{MLE}=\bar{X} $$
+
+<p class="font_style">我們考慮$n=200$個random sample, $X_1,X_2,...,X_{200}\sim N(\theta,1)$</p>
+
+
+```{r,cache=TRUE}
+# N(theta,1)
+# Set the parameter
+set.seed(123)
+n<-200 
+mu=2 
+mu1=-0.5
+mu2=4.5
+sigma2=1
+x<-rnorm(n,mean=mu,sd=sigma2) # X1,...,Xn
+```
+  
+<p class="font_style">此時我們可以得到最大概似估計量為樣本平均$\hat\theta=\bar{X}\approx1.991$，由於前面已證明，此處不再贅述</p>
+
+```{r,cache=TRUE}
+# Find  MLE.
+
+B<-10000
+Lf<-function(x,theta) prod( dnorm(x,mean=theta,sd=sigma2) ) #likelihood function
+theta.hat<-seq(mu1, mu2, length.out = B)
+
+L<-l<-c()
+for (i in 1:B){
+  #x<-rnorm(n,mean=mean,sd=1)
+  L[i]<-Lf(x,theta.hat[i])  
+  l[i]<-log(L[i])
+}
+# compare simlution MLE and theretical MLE
+theta_MLE=theta.hat[which.max(l)]
+theta_MLE;mean(x)
+```
+
+
+### 以下將以模擬，證明下面兩式
+$$I_1(\theta)=E\bigg[\bigg(\frac{\partial logf(X;\theta)}{\partial \theta}\bigg)^2\bigg]=-E\bigg[\frac{\partial^2 logf(X;\theta)}{\partial \theta^2}\bigg]$$
+$$E\bigg[\frac{\partial logf(X;\theta)}{\partial \theta}\bigg]=0$$
+
+<p class="font_style">我們從$n=80$個樣本中取出一個樣本$X_1$，並求其$logf(X;\theta)$，由於每個樣本中有$R=200$個觀測值$x_1,...,x_{200}$，每條線代表固定$x$的情況下，不同$\theta$的$logf(X;\theta)$構成的線，因此會有200條線$$logf(x;\theta)=-\frac{1}{2}log2\pi-\frac{1}{2}(x-\theta)^2$$</p>
+
+```{r,cache=TRUE}
+set.seed(1234)
+n<-80  # num of samples
+R<-200  # simulation times
+B<-5000  # num of possible theta
+xx<-seq(mu1, mu2, length.out = B)
+fy<-matrix(NA,R,B)
+rnormf<-rnorm(R,mean=mu,sd=sigma2)  # one sample (X_1) with R observations
+for(j in 1:R){
+  for(i in 1:B){
+    fy[j,i]<-dnorm(x=rnormf[j],mean=xx[i],sd=sigma2,log = TRUE)
+  }
+  if(j==1){
+    plot(xx,fy[1,],xlim=c(mu1,mu2),ylim=c(-10,-1),type = 'l',xlab='θ',ylab = 'log(f(x;θ))',main='θ to log(f(x;θ))')
+  }else{
+    lines(xx,fy[j,],col=j)
+  }
+}
+abline(v=mu,col=2,lty=2,lwd=3)
+text(mu,-10.2, labels=mu, col=1,cex=1.3, font=2,pos=3)
+```
+
+
+<p class="font_style">我們將$logf(X;\theta)$ 對$\theta$做一次偏微分</p>
+
+$$\frac{\partial}{\partial\theta}logf(\theta)=-\frac{1}{2}\cdot2\cdot(x-\theta)\cdot(-1) =x-\theta$$
+
+
+```{r,cache=TRUE}
+set.seed(1234)
+fydiff<-matrix(NA,R,B)
+theta2<-c(mu-0.8,mu,mu+0.8)
+fydiff2<-c()
+for(j in 1:R){
+  spl <- smooth.spline(fy[j,] ~ xx)
+  for(i in 1:B){
+    fydiff[j,i] <- predict(spl, x=xx[i], deriv=1)$y
+  }
+  if(j==1){
+    plot(xx,fydiff[1,],ylim=c(-4,4),type='l',xlab='θ',ylab = 'log( f\'(θ) )',main='θ to log( f\'(x;θ) )')
+  }else{
+    lines(xx,fydiff[j,],col=j)
+  }
+  spl2 <- smooth.spline(fydiff[j,] ~ xx)
+  fydiff2[j] <- predict(spl2, x=xx[i], deriv=1)$y
+}
+abline(v=theta2,col=c(2,3,4),lty=2,lwd=3)
+text(theta2,-4.5, labels=theta2, col=1,cex=1.3, font=2,pos=3)
+```
+
+
+<p class="font_style">$$E\bigg[\frac{\partial logf(X;\theta)}{\partial \theta}\bigg]=0$$  
+記住，在此$\theta$之範圍為$\forall\quad \theta\in\mathbb{R}$，在此情況下，可證得上式</p>
+
+
+```{r,cache=TRUE}
+mean((rowSums(fydiff)/B));0    
+```
+
+$$I_1(\theta)=E\bigg[\bigg(\frac{\partial logf(X;\theta)}{\partial \theta}\bigg)^2\bigg]=-E\bigg[\frac{\partial^2 logf(X;\theta)}{\partial \theta^2}\bigg]=-E\bigg[\frac{\partial}{\partial\theta}(x-\theta)\bigg]=1$$  
+
+
+```{r,cache=TRUE}
+mean((rowSums(fydiff)/B)^2);1 
+mean(fydiff2)*-1;1
+```
+
+### 以下將針對不同的
+<p class="font_style">$\theta_0,\theta_1,\theta_2,...,\theta_i,...$證明
+$$E\bigg[\frac{\partial}{\partial\theta}logf(\theta)_{|\theta=\theta_0}\bigg]=0$$</p>
+
+
+<p class="font_style">我們取$θ$範圍內的三個值，包含$θ_0=2$，畫出這三個$θ$下的$\frac{\partial}{\partial\theta}logf(\theta)$之Probability Density Plot  </p>
+
+```{r,cache=TRUE}
+set.seed(1234)
+fydifftheta<-matrix(NA,length(theta2),R)
+for(k in 1:length(theta2)){
+  for(j in 1:R){
+    spl <- smooth.spline(fy[j,] ~ xx)
+    fydifftheta[k,j]<-predict(spl, x=theta2[k], deriv=1)$y
+  }
+}
+par(mfrow=c(3,1),mar=c(2.5,2.5,2,1.5))
+plot(density(fydifftheta[1,]),xlim=c(-4,4),ylim=c(0,0.4),main = paste("θ=",theta2[1]),xlab = '')
+abline(v=mean(fydifftheta[1,]),col=2,lty=2,lwd=3)
+text(mean(fydifftheta[1,]),0, labels=round(mean(fydifftheta[1,]),3), col=1,cex=1.3, font=2,pos=3)
+#curve(dnorm(x,mean=mean(fydifftheta[1,])),col=2,add=T)
+plot(density(fydifftheta[2,]),xlim=c(-4,4),ylim=c(0,0.4),main = paste("θ=",theta2[2]),xlab = '')
+curve(dnorm(x,mean=0),col=2,add=T)
+abline(v=mean(fydifftheta[2,]),col=2,lty=2,lwd=3)
+text(mean(fydifftheta[2,]),0, labels=round(mean(fydifftheta[2,]),3), col=1,cex=1.3, font=2,pos=3)
+plot(density(fydifftheta[3,]),xlim=c(-4,4),ylim=c(0,0.4),main = paste("θ=",theta2[3]),xlab = '')
+abline(v=mean(fydifftheta[3,]),col=2,lty=2,lwd=3)
+text(mean(fydifftheta[3,]),0, labels=round(mean(fydifftheta[3,]),3), col=1,cex=1.3, font=2,pos=3)
+```
+
+### 檢定
+
+<p class="font_style">透過n個樣本，再次證明$$\hat\theta_{MLE}=\bar{X} $$</p>
+
+
+```{r,cache=TRUE}
+set.seed(12345)
+logLf<-function(x,theta) log(prod( dnorm(x,mean=theta,sd=sigma2) ))
+rnormdf<-matrix(rnorm(n*R,mean=mu,sd=sigma2), n, R) 
+xa<-rnormdf[,1]
+ly<-matrix(NA,R,B)
+theta_MLE<-c()
+for(j in 1:R){
+  xa<-rnormdf[,j]
+  for(i in 1:B){
+    ly[j,i]<-logLf(x=xa,theta=xx[i])
+  }
+  if(j==1){
+    plot(xx,ly[1,],xlim=c(mu1,mu2),ylim=c(-450,-50),type = 'l',xlab='θ',ylab = 'l(θ)',main='θ to l(θ)')
+  }else{
+    lines(xx,ly[j,],col=j)
+  }
+  theta_MLE[j]<-xx[which.max(ly[j,])]
+}
+abline(v=mu,col=2,lty=2)
+mean(theta_MLE);mean(rnormdf)  #theta_MLE=xbar
+var(theta_MLE);sigma2/n  #variance of xbar
+```
+
+
+$$E\bigg[\frac{\partial}{\partial \theta} logL(X;\theta)\bigg]=E\bigg[\frac{\partial }{\partial \theta}\sum^{n}_{i=1} logf(x_i;\theta)\bigg]=\sum^{n}_{i=1}E\bigg[\frac{\partial }{\partial \theta} logf(x_i;\theta)\bigg]=0$$
+
+
+
+```{r,cache=TRUE}
+lydiff<-matrix(NA,R,B)
+lydiff2<-c()
+for(j in 1:R){
+  spl <- smooth.spline(ly[j,] ~ xx)
+  for(i in 1:B){
+    lydiff[j,i] <- predict(spl, x=xx[i], deriv=1)$y
+  }
+  if(j==1){
+    plot(xx,lydiff[1,],type='l',xlab='θ',ylab = 'l\'(θ)',main='θ to l\'(θ)')
+  }else{
+    lines(xx,lydiff[j,],col=j)
+  }
+  spl2 <- smooth.spline(lydiff[j,] ~ xx)
+  lydiff2[j] <- predict(spl2, x=xx[i], deriv=1)$y
+}
+abline(v=mu,col=2,lty=2,lwd=3)
+text(mu,-180, labels=mu, col=1,cex=1.3, font=2,pos=3)
+```
+
+```{r,cache=TRUE}
+lydiffi<-rowSums(lydiff)/B
+mean(lydiffi);0  
+```
+
+
+$$I_n(\theta)=E\bigg[\bigg(\frac{\partial}{\partial \theta} logL(X;\theta)\bigg)^2\bigg]=E\bigg[\bigg(\frac{\partial }{\partial \theta}\sum^{n}_{i=1} logf(x_i;\theta)\bigg)^2\bigg]\dots\text{equation 1}
+\\=
+E\bigg[\sum^{n}_{i=1}\bigg(\frac{\partial }{\partial \theta} logf(x_i;\theta)\bigg)^2+\sum_{i\not=j}\frac{\partial }{\partial \theta}logf(x_i;\theta)\frac{\partial }{\partial \theta}logf(x_j;\theta)\bigg]
+\\=
+\sum^{n}_{i=1}E\bigg[\bigg(\frac{\partial }{\partial \theta} logf(x_i;\theta)\bigg)^2\bigg]+\sum_{i\not=j}\bigg\{E\bigg[\frac{\partial }{\partial \theta}logf(x_i;\theta)\bigg]E\bigg[\frac{\partial }{\partial \theta}logf(x_j;\theta)\bigg]\bigg\}
+\\=\sum^{n}_{i=1}E\bigg[\bigg(\frac{\partial }{\partial \theta} logf(x_i;\theta)\bigg)^2\bigg]=nI_1(\theta)\dots\text{equation 2}$$
+
+
+
+
+```{r,cache=TRUE}
+mean(lydiffi^2);var(lydiffi);n*-mean(fydiff2) #In(θ)
+I1<-mean(fydiff2)*-1 #I1(θ)
+In<-n*I1
+In
+```
+
+### 檢定
+<p class="font_style">$H_0:\theta=2,\quad H_1:\theta\not= 2 $
+我們在前面經過數學的推導知道
+$$\chi^2_R=\frac{U^2}{V}=\frac{(l'(\theta_0))^2}{I_n(\theta_0)}\sim\mathcal{X}_1^2
+\\
+\\$$
+根據檢定假設，我們已知$\theta_0=2$,因此我們現在只要用前面模擬出的資料，證明出$\chi^2_R=\frac{(l'(2))^2}{I_n(2)}$的分配近似於一個$\chi_1^2$</p>
+
+
+```{r,cache=TRUE}
+lydifftheta<-c()
+for(j in 1:R){
+  spl <- smooth.spline(ly[j,] ~ xx)
+  lydifftheta[j]<-predict(spl, x=mu, deriv=1)$y
+}
+
+U<-lydifftheta
+V<-In 
+RS<-U^2/V
+plot(density(RS,from=0),xlim=c(0,12))
+curve(dchisq(x,df=1),add=T,col=2)
+
+alpha<-0.05
+#abline(h=alpha,col=2,lwd=2)
+RR<-seq(qchisq(1-alpha,1),10,0.001)
+points(RR,rep(0,length(RR)), col=2, pch=16, cex=1)
+mean(ifelse(RS>qchisq(1-alpha,1),1,0))  # p-value
+```
+
+### 檢定力 Power of Test
+#### 1. 在不同sample size下的power比較
+
+```{r,cache=TRUE}
+B<-200
+n1<-10
+n2<-50
+n3<-500
+theta0<-2
+theta.hat<-seq(1, 3, length.out =B)
+RS1<-RS2<-RS3<-rep(NA,B)
+power1<-power2<-power3<-rep(NA,B)    #p(W>qchisq(0.95,1) | H1)
+for (j in 1:B){
+  H1_mu<-theta.hat[j]
+  for (i in 1:1000) {
+    x1<-rnorm(n1,mean=H1_mu,sd=sigma2)
+    x2<-rnorm(n2,mean=H1_mu,sd=sigma2)
+    x3<-rnorm(n3,mean=H1_mu,sd=sigma2)
+    V1<-n1*I1
+    V2<-n2*I1
+    V3<-n3*I1
+    U1<-sum(x1-theta0)
+    U2<-sum(x2-theta0)
+    U3<-sum(x3-theta0)
+    RS1[i]<-U1^2/V1
+    RS2[i]<-U2^2/V2
+    RS3[i]<-U3^2/V3
+  }
+  power1[j]<-mean(RS1>qchisq(0.95,1))
+  power2[j]<-mean(RS2>qchisq(0.95,1))
+  power3[j]<-mean(RS3>qchisq(0.95,1))
+}
+plot(smooth.spline(theta.hat,power1),type="l",col=2,main="Power Curve",ylim=c(0,1),xlab=expression(theta),ylab="Power")
+lines(smooth.spline(theta.hat,power2),type="l",col=3)
+lines(smooth.spline(theta.hat,power3),type="l",col=4)
+legend("topright",c("Simulation -- n=10","Simulation -- n=50","Simulation -- n=200"),lty = rep(1,3),col = c(2,3,4),cex = 0.8)
+
+score_power_mu_n1<-smooth.spline(theta.hat,power1)
+score_power_mu_n2<-smooth.spline(theta.hat,power2)
+score_power_mu_n3<-smooth.spline(theta.hat,power3)
+```
+
+#### 2. 在不同variance下的power比較
+
+$$L(\theta;X)=\prod^n_{i=1}f(x_i;\theta)=\big(\frac{1}{\sqrt{2\pi\sigma^2}}\big)^n e^{-\frac{\sum_{i=1}^{n}(x_i-\theta)^2}{2\sigma^2}}$$
+$$l(\theta;X)=-\frac{n}{2}log2\pi\sigma^2-\frac{1}{2\sigma^2}\sum_{i=1}^{n}(x_i-\theta)^2$$
+$$l'(\theta_0)=\frac{1}{\sigma^2}\sum_{i=1}^{n}(x_i-\theta_0)$$
+$$I_1(\theta_0)=-E\bigg[\frac{\partial^2 logf(X;\theta)}{\partial \theta^2}\bigg]_{\big|\theta=\theta_0}=-E\bigg[\frac{1}{\sigma^2}\frac{\partial}{\partial\theta}(x-\theta)\bigg]=\frac{1}{\sigma^2}$$
+
+```{r,cache=TRUE}
+B<-200
+n<-50
+var1<-1
+var2<-5
+var3<-13
+theta0<-2
+theta.hat<-seq(1, 3, length.out =B)
+RS1<-RS2<-RS3<-rep(NA,B)
+power1<-power2<-power3<-rep(NA,B)    #p(W>qchisq(0.95,1) | H1)
+for (j in 1:B){
+  H1_mu<-theta.hat[j]
+  for (i in 1:1000) {
+    x1<-rnorm(n,mean=H1_mu,sd=sqrt(var1))
+    x2<-rnorm(n,mean=H1_mu,sd=sqrt(var2))
+    x3<-rnorm(n,mean=H1_mu,sd=sqrt(var3))
+    V1<-n*I1/var1
+    V2<-n*I1/var2
+    V3<-n*I1/var3
+    U1<-(sum(x1-theta0))/var1
+    U2<-(sum(x2-theta0))/var2
+    U3<-(sum(x3-theta0))/var3
+    RS1[i]<-U1^2/V1
+    RS2[i]<-U2^2/V2
+    RS3[i]<-U3^2/V3
+  }
+  power1[j]<-mean(RS1>qchisq(0.95,1))
+  power2[j]<-mean(RS2>qchisq(0.95,1))
+  power3[j]<-mean(RS3>qchisq(0.95,1))
+}
+plot(smooth.spline(theta.hat,power1),type="l",col=2,main="Power Curve",ylim=c(0,1),xlab=expression(theta),ylab="Power")
+lines(smooth.spline(theta.hat,power2),type="l",col=3)
+lines(smooth.spline(theta.hat,power3),type="l",col=4)
+legend("topright",c("Simulation -- n=10","Simulation -- n=50","Simulation -- n=200"),lty = rep(1,3),col = c(2,3,4),cex = 0.8)
+score_power_mu_var1<-smooth.spline(theta.hat,power1)
+score_power_mu_var2<-smooth.spline(theta.hat,power2)
+score_power_mu_var3<-smooth.spline(theta.hat,power3)
+```
+
+## Normal Distribution N(0,theta)
+$$N(1,\theta)$$
+<p class="font_style">考慮$n=200$個random sample,$X_1,X_2,...,X_{200}\sim N(1,\theta)$,
+$H_0：\theta=0.81$</p>
+
+```{r ,cache=TRUE}
+set.seed(1234)
+n <- 200
+mu <- 1
+sigma <- 0.81 #sigma=sqrt(sigma)
+x <- rnorm(n,mean=mu,sd=sqrt(sigma))
+mean(var(x))
+```
+
+<p class="font_style">我們得到最大概似估計量為</p>
+$$\hat\theta=  \frac{1}{n}\sum_{i=1}^{200} (x_i-1)^2 \approx 0.843$$
+
+```{r ,cache=TRUE}
+set.seed(1234)
+B<-1000
+Lf<-function(x,theta) prod( dnorm(x,mean=mu,sd=sqrt(theta)) ) #likelihood function
+theta.hat<-seq(0.5, 1.2, length.out = B)
+
+L<-l<-c()
+for (i in 1:B){
+  #x<-rnorm(n,mean=0,sd=theta)
+  L[i]<-Lf(x,theta.hat[i])  
+  l[i]<-log(L[i])
+}
+#compare simlution MLE and theretical MLE
+theta_MLE=(theta.hat[which.max(l)])
+theta_MLE;mean(var(x))*(n-1)/n
+```
+
+### 以下將以模擬，證明下面兩式
+$$I_1(\theta)=E\bigg[\bigg(\frac{\partial logf(X;\theta)}{\partial \theta}\bigg)^2\bigg]=-E\bigg[\frac{\partial^2 logf(X;\theta)}{\partial \theta^2}\bigg]$$
+$$E\bigg[\frac{\partial logf(X;\theta)}{\partial \theta}\bigg]=0$$
+
+<p class="font_style">我們從$n=80$個樣本中取出一個樣本$X_1$，並求其$logf(X;\theta)$，由於每個樣本中有$R=200$個觀測值$x_1,...,x_{200}$，每條線代表固定$x$的情況下，不同$\theta$的$logf(X;\theta)$構成的線，因此會有200條線</p>
+
+$$logf(x;\theta)=-\frac{1}{2}log(2\pi\theta)-\frac{(x-1)^2}{2\theta}$$
+
+```{r ,cache=TRUE}
+set.seed(1234)
+n<-80  # num of samples
+R<-200  # simulation times
+B<-5000  # num of possible theta
+xx<-seq(0.5, 1.2, length.out = B)
+fy<-matrix(NA,R,B)
+rnormf<-rnorm(R,mean=mu,sd=sqrt(sigma))  # one sample (X_1) with R observations
+for(j in 1:R){
+  for(i in 1:B){
+    fy[j,i]<-dnorm(x=rnormf[j],mean=mu,sd=sqrt(xx[i]),log = TRUE)
+  }
+  if(j==1){
+    plot(xx,fy[1,],xlim=c(0.5,1.2),ylim=c(-3,-0.5),type = 'l',xlab='θ',ylab = 'log(f(x;θ))',main='θ to log(f(x;θ))')
+  }else{
+    lines(xx,fy[j,],col=j)
+  }
+}
+abline(v=sigma,col=2,lty=2,lwd=3)
+text(sigma,-10.2, labels=sigma, col=1,cex=1.3, font=2,pos=3)
+```
+
+<p class="font_style">將$logf(x;\theta)$對$\theta$做一次偏微分$$logf'(x;\theta)=-\frac{1}{2\theta}+\frac{(x-1)^2}{2\theta^2}$$</p>
+
+```{r ,cache=TRUE}
+set.seed(1234)
+fydiff<-matrix(NA,R,B)
+sigma2<-c(0.5,sigma,1.2)
+fydiff2<-c()
+for(j in 1:R){
+  spl <- smooth.spline(fy[j,] ~ xx)
+  for(i in 1:B){
+    fydiff[j,i] <- predict(spl, x=xx[i], deriv=1)$y
+  }
+  if(j==1){
+    plot(xx,fydiff[1,],type='l',xlab='θ',ylab = 'log( f\'(θ) )',main='θ to log( f\'(x;θ) )')
+  }else{
+    lines(xx,fydiff[j,],col=j)
+  }
+  spl2 <- smooth.spline(fydiff[j,] ~ xx)
+  fydiff2[j] <- predict(spl2, x=xx[i], deriv=1)$y
+}
+abline(v=sigma,col=3,lty=2,lwd=3)
+text(sigma,0, labels=sigma, col=1,cex=1.3, font=2,pos=3)
+```
+
+```{r,cache=TRUE}
+mean(fydiff);0
+#mean(((rowSums(fydiff)/B)^2)^2);mean(fydiff2^2);9
+plot(xx,colSums(fydiff)/R,type='l')
+abline(h=0)
+spl<-spline(colSums(fydiff)/R~xx)
+spl$x[which.min(abs(spl$y))];theta_MLE
+```
+
+<p class="font_style">針對不同的$\theta_0,\theta_1,....,\theta_n$證明$$E\bigg[\frac{\partial}{\partial\theta}logf(\theta)_{|\theta=\theta_0}\bigg]=0$$</p>
+
+```{r ,cache=TRUE}
+set.seed(1234)
+fydifftheta<-matrix(NA,length(sigma2),R)
+for(k in 1:length(sigma2)){
+  for(j in 1:R){
+    spl <- smooth.spline(fy[j,] ~ xx)
+    fydifftheta[k,j]<-predict(spl, x=sigma2[k], deriv=1)$y
+  }
+}
+sigma2[1];mean(fydifftheta[1,])
+sigma2[2];mean(fydifftheta[2,])
+sigma2[3];mean(fydifftheta[3,])
+```
+
+$$L(x;\theta)=\prod^n_{i=1}f(x;\theta)=(2\pi\theta)^\frac{-n}{2}exp\lbrace \frac{-\sum_{i=1}^{n}(x_i-1)^2}{2\theta} \rbrace$$
+$$l=logL(x;\theta)=-\frac{n}{2}log(2\pi\theta)-\frac{\sum_{i=1}^{n}(x_i-1)^2}{2\theta}$$
+$$\frac{\partial l}{\partial \theta}=-\frac{n}{2\theta}+\frac{\sum_{i=1}^{n}(x_i-1)^2}{2\theta^2}$$
+<p class="font_style">藉由n個樣本，證明$$\hat\theta_{MLE}=\frac{1}{n} \sum_{i=1}^{n} (x_i-1)^2$$</p>
+
+```{r ,cache=TRUE}
+set.seed(1234)
+n<-80  # num of samples
+R<-100  # simulation times
+B<-5000  # num of possible theta
+xx<-seq(0.5, 1.2, length.out = B)
+logLf<-function(x,theta) log(prod( dnorm(x,mean=mu,sd=theta) ))
+rnormdf<-matrix(rnorm(n*R,mean=mu,sd=sqrt(sigma)), n, R) 
+xa<-rnormdf[,1]
+ly<-matrix(NA,R,B)
+theta_MLE<-c()
+for(j in 1:R){
+  xa<-rnormdf[,j]
+  for(i in 1:B){
+    ly[j,i]<-logLf(x=xa,theta=sqrt(xx[i]))
+  }
+  if(j==1){
+    plot(xx,ly[1,],xlim=c(0.5,1.2),ylim=c(-450,-50),type = 'l',xlab='θ',ylab = 'l(θ)',main='θ to l(θ)')
+  }else{
+    lines(xx,ly[j,],col=j)
+  }
+  theta_MLE[j]<-xx[which.max(ly[j,])]
+}
+abline(v=mean(theta_MLE),col="blue",lty=2)
+abline(v=sigma,col=2,lty=2)
+mean(theta_MLE);var(theta_MLE)
+mean(theta_MLE*n/(n-1))#unbiased estimator
+```
+
+
+$$I_1(\theta)=-E\bigg[\frac{\partial^2 logf(X;\theta)}{\partial \theta^2}\bigg]=-E\bigg[\frac{\partial}{\partial\theta}\bigg(-\frac{1}{2\theta}+\frac{(x-1)^2}{2\theta^2}\bigg)\bigg]=\frac{1}{2\theta^2}\approx0.7621$$
+
+
+```{r ,cache=TRUE}
+lydiff<-matrix(NA,R,B)
+lydiff2<-c()
+for(j in 1:R){
+  spl <- smooth.spline(ly[j,] ~ xx)
+  for(i in 1:B){
+    lydiff[j,i] <- predict(spl, x=xx[i], deriv=1)$y
+  }
+  if(j==1){
+    plot(xx,lydiff[1,],type='l',xlab='θ',ylab = 'l\'(θ)',main='θ to l\'(θ)')
+  }else{
+    lines(xx,lydiff[j,],col=j)
+  }
+  spl2 <- smooth.spline(lydiff[j,] ~ xx)
+  lydiff2[j] <- predict(spl2, x=xx[i], deriv=1)$y
+}
+abline(v=sigma,col=2,lty=2,lwd=3)
+text(sigma,-8, labels=sigma, col=1,cex=1.3, font=2,pos=3)
+lydiffi <- rowSums(lydiff)/B
+mean(lydiffi);0
+mean(lydiffi^2);var(lydiffi) #76.21   #n*-mean(fydiff2)  #In n/(2*sigma^2)-1/(sigma^3)*mean((xx-1)^2)
+In<-var(lydiffi)
+#I1<-mean(fydiff2)*-1 #I1(θ)
+#In<-n*I1
+#In
+
+```
+
+### 檢定
+<p class="font_style">根據前面的推導過程，我們用前面的資料，證明$\chi^2_R \approx \chi^2_1$</p>
+
+```{r }
+lydifftheta<-c()
+for(j in 1:R){
+  spl <- smooth.spline(ly[j,] ~ xx)
+  lydifftheta[j]<-predict(spl, x=sigma, deriv=1)$y
+}
+
+U<-lydifftheta
+V<-var(lydiffi)  #In 
+RS<-U^2/V
+plot(density(RS,from=0,bw=0.9),xlim=c(0,60))
+curve(dchisq(x,df=1),add=T,col=2)
+
+alpha<-0.05
+#abline(h=alpha,col=2,lwd=2)
+RR<-seq(qchisq(1-alpha,1),60,0.001)
+points(RR,rep(0,length(RR)), col=2, pch=16, cex=1)
+```
+
+### 檢定力Power of test
+
+
+```{r ,cache=TRUE}
+B<-200
+n<-50
+sigma<-0.81
+theta.hat<-seq(0.5, 1.2, length.out =B)
+RS<-rep(NA,B)
+power<-rep(NA,B)    #p(W>qchisq(0.95,1) | H1)
+for (j in 1:B){
+  H1_sigma<-theta.hat[j]
+  for (i in 1:B) {
+    x<-rnorm(n,mean=mu,sd=sqrt(H1_sigma))
+    V<-In
+    U<-sum((-1/(2*sigma))+((x-1)^2)/(2*sigma^2))
+    RS[i]<-U^2/In
+  }
+  power[j]<-mean(RS>qchisq(0.95,1))
+}
+plot(smooth.spline(theta.hat,power),col=2,main="Power Curve")
+
+```
+
+### 1. 在不同樣本數的Power比較
+
+```{r ,cache=TRUE}
+#不同樣本數
+B<-200
+n1<-30
+n2<-50
+n3<-200
+
+sigma<-0.81
+I1<-1/2/sigma^2
+theta.hat<-seq(0.5, 1.2, length.out =B)
+RS1<-RS2<-RS3<-rep(NA,B)
+power1<-power2<-power3<-rep(NA,B)    #p(W>qchisq(0.95,1) | H1)
+for (j in 1:B){
+  H1_sigma<-theta.hat[j]
+  for (i in 1:1000) {
+    x1<-rnorm(n1,mean=mu,sd=sqrt(H1_sigma))
+    x2<-rnorm(n2,mean=mu,sd=sqrt(H1_sigma))
+    x3<-rnorm(n3,mean=mu,sd=sqrt(H1_sigma))
+    V1<-n1*I1
+    V2<-n2*I1
+    V3<-n3*I1
+    U1<--n1/(2*sigma)+sum((x1-1)^2)/(2*sigma^2)
+    U2<--n2/(2*sigma)+sum((x2-1)^2)/(2*sigma^2)
+    U3<--n3/(2*sigma)+sum((x3-1)^2)/(2*sigma^2)
+    RS1[i]<-U1^2/V1
+    RS2[i]<-U2^2/V2
+    RS3[i]<-U3^2/V3
+  }
+  power1[j]<-mean(RS1>qchisq(0.95,1))
+  power2[j]<-mean(RS2>qchisq(0.95,1))
+  power3[j]<-mean(RS3>qchisq(0.95,1))
+}
+plot(smooth.spline(theta.hat,power1),type="l",col=2,main="Power Curve",ylim=c(0,1),xlab=expression(theta),ylab="Power")
+lines(smooth.spline(theta.hat,power2),type="l",col=3)
+lines(smooth.spline(theta.hat,power3),type="l",col=4)
+legend("topright",c("Simulation -- n=10","Simulation -- n=50","Simulation -- n=200"),lty = rep(1,3),col = c(2,3,4),cex = 0.8)
+
+score_power_var_n1<-smooth.spline(theta.hat,power1)
+score_power_var_n2<-smooth.spline(theta.hat,power2)
+score_power_var_n3<-smooth.spline(theta.hat,power3)  
+```
+
+### 2.在不同平均數的Power比較
+$$I_1(\theta_0)=-E\bigg[\frac{\partial^2 logf(X;\theta)}{\partial \theta^2}\bigg]_{\big|\theta=\theta_0}=-E\bigg[\bigg(\frac{1}{2\theta_0^2}-\frac{(x-1)^2}{\theta_0^3}\bigg)\bigg]=\frac{1}{2\theta_0^2}+\frac{(\mu-1)^2}{\theta_0^3}$$
+
+```{r,cache=TRUE}
+#不同平均數
+B<-200
+n<-50
+mu1<-1
+mu2<-5
+mu3<--3
+theta.hat<-seq(0.5, 1.2, length.out =B)
+RS1<-RS2<-RS3<-rep(NA,B)
+power1<-power2<-power3<-rep(NA,B)    #p(W>qchisq(0.95,1) | H1)
+for (j in 1:B){
+  H1_sigma<-theta.hat[j]
+  for (i in 1:1000) {
+    x1<-rnorm(n,mean=mu1,sd=sqrt(H1_sigma))
+    x2<-rnorm(n,mean=mu2,sd=sqrt(H1_sigma))
+    x3<-rnorm(n,mean=mu3,sd=sqrt(H1_sigma))
+    I1_1<-1/(2*sigma^2)+(mu1-1)^2/(sigma^3)
+    I1_2<-1/(2*sigma^2)+(mu2-1)^2/(sigma^3)
+    I1_3<-1/(2*sigma^2)+(mu3-1)^2/(sigma^3)
+    V1<-n*I1_1
+    V2<-n*I1_2
+    V3<-n*I1_3
+    U1<--n/(2*sigma)+sum((x1-1)^2)/(2*sigma^2)
+    U2<--n/(2*sigma)+sum((x2-1)^2)/(2*sigma^2)
+    U3<--n/(2*sigma)+sum((x3-1)^2)/(2*sigma^2)
+    RS1[i]<-U1^2/V1
+    RS2[i]<-U2^2/V2
+    RS3[i]<-U3^2/V3
+  }
+  power1[j]<-mean(RS1>qchisq(0.95,1))
+  power2[j]<-mean(RS2>qchisq(0.95,1))
+  power3[j]<-mean(RS3>qchisq(0.95,1))
+}
+plot(smooth.spline(theta.hat,power1),type="l",ylim=c(0,1),col=2,main="Power Curve",xlab=expression(theta),ylab="Power")
+lines(smooth.spline(theta.hat,power2),type="l",col=3)
+lines(smooth.spline(theta.hat,power3),type="l",col=4)
+legend("topright",c("Simulation -- mu=1","Simulation -- mu=5","Simulation -- mu=-3"),lty = rep(1,3),col = c(2,3,4),cex = 0.8)
+score_power_var_mean1<-smooth.spline(theta.hat,power1)
+score_power_var_mean2<-smooth.spline(theta.hat,power2)
+score_power_var_mean3<-smooth.spline(theta.hat,power3)
+```
+
+
+## Exponential distribution exp(rate)
+$Exp(\theta)$
+
+###  我們將先證明
+$$\hat\theta_{MLE}=\frac{1}{\bar{X}} $$
+
+我們考慮$n=200$個random sample, $X_1,X_2,...,X_{200}\sim Exp(rate)$
+
+```{r ,cache=TRUE}
+# Exp(theta)
+# Set the parameter
+set.seed(123)
+n = 200 
+rate = 2 
+rate1 = 1
+rate2 = 3.5
+X = rexp(n,rate=rate) # X1,...,Xn
+```
+
+<p class="font_style">此時我們可以得到最大概似估計量為樣本平均$\hat\theta=\frac{1}{\bar{X}}\approx1.986$ </p> 
+
+```{r ,cache=TRUE}
+# Set Likelihood function
+B = 10000
+Lf = function(x,r) prod( dexp(x,rate=r) ) 
+theta.hat = seq(rate1,rate2,length.out = B)
+
+#Find the MLE
+L = l = c()
+for (i in 1:B){
+  #x<-rnorm(n,mean=mean,sd=1)
+  L[i] = Lf(X,theta.hat[i])  
+  l[i] = log(L[i])
+}
+# compare simlution MLE and theretical MLE
+theta_MLE = theta.hat[which.max(l)]
+theta_MLE ; 1/mean(X)
+```
+
+### 以下將以模擬，證明下面兩式
+$$I_1(\theta)=E\bigg[\bigg(\frac{\partial logf(X;\theta)}{\partial \theta}\bigg)^2\bigg]=-E\bigg[\frac{\partial^2 logf(X;\theta)}{\partial \theta^2}\bigg]$$
+$$E\bigg[\frac{\partial logf(X;\theta)}{\partial \theta}\bigg]=0$$
+
+<p class="font_style">我們從$n=80$個樣本中取出一個樣本$X_1$，並求其$logf(X;\theta)$，由於每個樣本中有$R=200$個觀測值$x_1,...,x_{200}$，每條線代表固定$x$的情況下，不同$\theta$的$logf(X;\theta)$構成的線，因此會有200條線$$logf(x;\theta)=log\theta-\theta x$$</p>
+
+```{r ,cache=TRUE}
+rate1 = 0.5
+rate2 = 3.5
+set.seed(1234)
+n<-80  # num of samples
+R<-200  # simulation times
+B<-10000  # num of possible theta
+xx<-seq(rate1, rate2, length.out = B) 
+fy<-matrix(NA,R,B)
+rexpdf<-rexp(R,rate=rate)  # one sample (X_1) with R observations
+for(j in 1:R){
+  for(i in 1:B){
+    fy[j,i]<-dexp(x=rexpdf[j],rate=xx[i],log = TRUE)
+  }
+  if(j==1){
+    plot(xx,fy[1,],xlim=c(rate1,rate2),ylim=c(-10,1),type = 'l',xlab='θ',ylab = 'log(f(x;θ))',main='θ to log(f(x;θ))')
+  }else{
+    lines(xx,fy[j,],col=j)
+  }
+}
+abline(v=rate,col=2,lty=2,lwd=3)
+text(rate,-10.2, labels=rate, col=1,cex=1.3, font=2,pos=3)
+
+
+```
+
+<p class="font_style">我們將$logf(X;\theta)$ 對$\theta$做一次偏微分</p>
+
+$$\frac{\partial}{\partial\theta}logf(\theta)=\frac{1}{\theta}-x$$
+
+```{r ,cache=TRUE}
+set.seed(6053)
+
+fydiff<-matrix(NA,R,B)
+fydiff2<-c()
+theta2<-c(rate-1,rate,rate+1)
+#p<-matrix(NA,R,B)
+p<-c()
+p2<-c()
+for(j in 1:R){
+  #s1 <- smooth.spline(fy[j,] ~ xx)
+  spl <- smooth.spline(fy[j,] ~ xx)
+  p[j]<-predict(spl,x=rate,derive=1)$y
+  for(i in 1:B){
+    fydiff[j,i] <- predict(spl, x=xx[i], deriv=1)$y
+  }
+  if(j==1){
+    plot(xx,fydiff[1,],ylim=c(-4,4),type='l',xlab='θ',ylab = 'log( f\'(θ) )',main='θ to log( f\'(x;θ) )')
+  }else{
+    lines(xx,fydiff[j,],col=j)
+  }
+  spl2 <- smooth.spline(fydiff[j,] ~ xx)
+  fydiff2[j] <- predict(spl2, x=xx[i], deriv=1)$y
+  #s2 <-smooth.spline(p[j,]~rate)
+  p2[j]<- predict(spl2,x=rate,deriv=1)$y
+}
+abline(v=theta2,col=c(2,3,4),lty=2,lwd=3)
+text(theta2,-4.5, labels=theta2, col=1,cex=1.3, font=2,pos=3)
+
+
+
+```
+
+$$E\bigg[\frac{\partial logf(X;\theta)}{\partial \theta}\bigg]=0$$ 
+
+```{r,cache=TRUE}
+mean(fydiff)
+mean(p)
+
+
+plot(xx,colSums(fydiff)/R,type='l')
+abline(h=0)
+spl<-spline(colSums(fydiff)/R~xx)
+spl$x[which.min(abs(spl$y))]
+```
+
+$$I_1(\theta)=E\bigg[\bigg(\frac{\partial logf(X;\theta)}{\partial \theta}\bigg)^2\bigg]=-E\bigg[\frac{\partial^2 logf(X;\theta)}{\partial \theta^2}\bigg]=-E\bigg[\frac{\partial}{\partial\theta}(\frac{1}{\theta}-x)\bigg]=\frac{1}{\theta^2}$$  
+
+```{r ,cache=TRUE}
+mean((rowSums(fydiff)/B)^2);1/(2^2)
+#mean(fydiff2)*-1;1
+
+#mean(p^2) 
+mean(p2)*-1 ; 1/rate^2
+```
+
+
+
+### 以下將針對不同的
+<p class="font_style">$\theta_0,\theta_1,\theta_2,...,\theta_i,...$證明$$E\bigg[\frac{\partial}{\partial\theta}logf(\theta)_{|\theta=\theta_0}\bigg]=0$$我們取$θ$範圍內的三個值，包含$θ_0=2$，求出這三個$θ$下的$\frac{\partial}{\partial\theta}logf(\theta)$之期望值</p>
+
+```{r ,cache=TRUE}
+set.seed(1234)
+fydifftheta<-matrix(NA,length(theta2),R)
+for(k in 1:length(theta2)){
+  for(j in 1:R){
+    spl <- smooth.spline(fy[j,] ~ xx)
+    fydifftheta[k,j]<-predict(spl, x=theta2[k], deriv=1)$y
+  }
+}
+theta2[1];mean(fydifftheta[1,])
+theta2[2];mean(fydifftheta[2,])
+theta2[3];mean(fydifftheta[3,])
+
+```
+
+
+### 檢定
+
+<p class="font_style">透過n個樣本，再次證明$$\hat\theta_{MLE}=\frac{1}{\bar{X}} $$</p>
+
+```{r ,cache=TRUE}
+set.seed(12345)
+logLf<-function(x,r) log(prod( dexp(x,rate=r) ))
+rexpdf<-matrix(rexp(n*R,rate=rate), n, R) 
+xa<-rexpdf[,1]
+ly<-matrix(NA,R,B)
+theta_MLE<-c()
+for(j in 1:R){
+  xa<-rexpdf[,j]
+  for(i in 1:B){
+    ly[j,i]<-logLf(x=xa,r=xx[i])
+  }
+  if(j==1){
+    plot(xx,ly[1,],xlim=c(rate1,rate2),ylim=c(-300,100),type = 'l',xlab='θ',ylab = 'l(θ)',main='θ to l(θ)')
+  }else{
+    lines(xx,ly[j,],col=j)
+  }
+  theta_MLE[j]<-xx[which.max(ly[j,])]
+}
+abline(v=rate,col=2,lty=2)
+mean(theta_MLE);1/mean(rexpdf)  #theta_MLE=1/xbar
+var(theta_MLE);1/(mean(rexpdf)^2)/n #variance of xbar
+```
+
+$$E\bigg[\frac{\partial}{\partial \theta} logL(X;\theta)\bigg]=E\bigg[\frac{\partial }{\partial \theta}\sum^{n}_{i=1} logf(x_i;\theta)\bigg]=\sum^{n}_{i=1}E\bigg[\frac{\partial }{\partial \theta} logf(x_i;\theta)\bigg]=0$$  
+
+```{r ,cache=TRUE}
+lydiff<-matrix(NA,R,B)
+lydiff2<-c()
+for(j in 1:R){
+  spl <- smooth.spline(ly[j,] ~ xx)
+  for(i in 1:B){
+    lydiff[j,i] <- predict(spl, x=xx[i], deriv=1)$y
+  }
+  if(j==1){
+    plot(xx,lydiff[1,],type='l',xlab='θ',ylab = 'l\'(θ)',main='θ to l\'(θ)')
+  }else{
+    lines(xx,lydiff[j,],col=j)
+  }
+  spl2 <- smooth.spline(lydiff[j,] ~ xx)
+  lydiff2[j] <- predict(spl2, x=xx[i], deriv=1)$y
+}
+abline(v=rate,col=2,lty=2,lwd=3)
+text(rate,-180, labels=rate, col=1,cex=1.3, font=2,pos=3)
+```
+
+```{r ,cache=TRUE}
+lydiffi<-rowSums(lydiff)/B
+mean(lydiffi);0  
+
+
+plot(xx,colSums(lydiff)/R,type='l')
+abline(h=0)
+spl<-spline(colSums(lydiff)/R~xx)
+spl$x[which.min(abs(spl$y))]
+```
+
+$$I_n(\theta)=E\bigg[\bigg(\frac{\partial}{\partial \theta} logL(X;\theta)\bigg)^2\bigg]=E\bigg[\bigg(\frac{\partial }{\partial \theta}\sum^{n}_{i=1} logf(x_i;\theta)\bigg)^2\bigg]\dots\text{equation 1}
+\\=
+E\bigg[\sum^{n}_{i=1}\bigg(\frac{\partial }{\partial \theta} logf(x_i;\theta)\bigg)^2+\sum_{i\not=j}\frac{\partial }{\partial \theta}logf(x_i;\theta)\frac{\partial }{\partial \theta}logf(x_j;\theta)\bigg]
+\\=
+\sum^{n}_{i=1}E\bigg[\bigg(\frac{\partial }{\partial \theta} logf(x_i;\theta)\bigg)^2\bigg]+\sum_{i\not=j}\bigg\{E\bigg[\frac{\partial }{\partial \theta}logf(x_i;\theta)\bigg]E\bigg[\frac{\partial }{\partial \theta}logf(x_j;\theta)\bigg]\bigg\}
+\\=\sum^{n}_{i=1}E\bigg[\bigg(\frac{\partial }{\partial \theta} logf(x_i;\theta)\bigg)^2\bigg]=nI_1(\theta)\dots\text{equation 2}$$  
+
+
+```{r }
+In = var(lydiffi)
+I1 = var(lydiffi)/n
+I1
+In
+```
+
+
+### 檢定
+<p class="font_style">$H_0:\theta=2,\quad H_1:\theta\not= 2 $
+我們在前面經過數學的推導知道$$\chi^2_R=\frac{U^2}{V}=\frac{(l'(\theta_0))^2}{I_n(\theta_0)}\sim\mathcal{X}_1^2
+\\
+\\$$根據檢定假設，我們已知$\theta_0=2$,因此我們現在只要用前面模擬出的資料，證明出$\chi^2_R=\frac{(l'(2))^2}{I_n(2)}$的分配近似於一個$\chi_1^2$</p>
+
+
+```{r ,cache=TRUE}
+lydifftheta<-c()
+for(j in 1:R){
+  spl <- smooth.spline(ly[j,] ~ xx)
+  lydifftheta[j]<-predict(spl, x=rate,deriv=1)$y
+}
+
+U<-lydifftheta
+V<-In 
+RS<-U^2/V
+plot(density(RS,from=0),xlim=c(0,12))
+curve(dchisq(x,df=1),add=T,col=2)
+
+alpha<-0.05
+#abline(h=alpha,col=2,lwd=2)
+RR<-seq(qchisq(1-alpha,1),10,0.001)
+points(RR,rep(0,length(RR)), col=2, pch=16, cex=1)
+mean(ifelse(RS>qchisq(1-alpha,1),1,0))  # p-value
+```
+
+
+### 檢定力 Power of Test
+
+```{r ,cache=TRUE}
+
+B<-200
+n<-50
+theta0<-2
+theta.hat<-seq(1, 3,length.out =B)
+RS<-rep(NA,B)
+power<-rep(NA,B)    #p(W>qchisq(0.95,1) | H1)
+for (j in 1:B){
+  H1_theta<-theta.hat[j]
+  for (i in 1:B) {
+    x<-rexp(n,rate=H1_theta) #Under 
+    V<-In 
+    U<-sum(1/theta0-x) # logf(x;theta) = 1/theta - x
+    RS[i]<-U^2/In
+  }
+  power[j]<-mean(RS>qchisq(0.95,1))
+}
+plot(theta.hat,power,main="Power Curve",col="red")
+
+```
+
+### 檢定力 Power of Test
+#### 在不同sample size下的power比較
+
+$$L(\theta;x) = \prod^n_{i=1}f(x_i;\theta) = \theta^n\exp\left({-\theta}{\sum_{1}^{n}{x}_{i}} \right)$$
+$$l(\theta;X)=nlog\theta-\theta\sum_{i=1}^{n}x_i$$
+
+$$l'(\theta_0)=\frac{n}{\theta_0}-\sum_{i=1}^{n}x_i$$
+
+$$I_1(\theta_0)=-E\bigg[\frac{\partial^2 logf(X;\theta)}{\partial \theta^2}\bigg]_{\big|\theta=\theta_0}=-E\bigg[-\frac{1}{\theta_0^2}\bigg]=\frac{1}{\theta_0^2}$$
+
+```{r,cache=TRUE}
+### 檢定力 Power of Test
+#### 1. 在不同sample size下的power比較 
+
+B<-200
+n1<-30
+n2<-50
+n3<-200
+theta0<-2
+theta.hat<-seq(1, 3, length.out =B)
+RS1<-RS2<-RS3<-rep(NA,B)
+power1<-power2<-power3<-rep(NA,B)    #p(W>qchisq(0.95,1) | H1)
+for (j in 1:B){
+  H1_mu<-theta.hat[j]
+  for (i in 1:1000) {
+    x1<-rexp(n1,rate=H1_mu)
+    x2<-rexp(n2,rate=H1_mu)
+    x3<-rexp(n3,rate=H1_mu)
+    V1<-n1*I1
+    V2<-n2*I1
+    V3<-n3*I1
+    U1<-sum(1/theta0-x1)
+    U2<-sum(1/theta0-x2)
+    U3<-sum(1/theta0-x3)
+    RS1[i]<-U1^2/V1
+    RS2[i]<-U2^2/V2
+    RS3[i]<-U3^2/V3
+  }
+  power1[j]<-mean(RS1>qchisq(0.95,1))
+  power2[j]<-mean(RS2>qchisq(0.95,1))
+  power3[j]<-mean(RS3>qchisq(0.95,1))
+}
+plot(smooth.spline(theta.hat,power1),type="l",col=2,main="Power Curve",ylim=c(0,1),xlab=expression(theta),ylab="Power")
+lines(smooth.spline(theta.hat,power2),type="l",col=3)
+lines(smooth.spline(theta.hat,power3),type="l",col=4)
+legend("topright",c("Simulation -- n=10","Simulation -- n=50","Simulation -- n=200"),lty = rep(1,3),col = c(2,3,4),cex = 0.8)
+score_power_rate_n1<-smooth.spline(theta.hat,power1)
+score_power_rate_n2<-smooth.spline(theta.hat,power2)
+score_power_rate_n3<-smooth.spline(theta.hat,power3)
+```
+
+
+# 比較三種test
+
+1. 比較power的差異
+
+```{r,cache=TRUE}
+par(mfrow=c(2,3))
+#當N(mu,1)
+plot(likehood_power_mu_n1,col="red",type='l')
+lines(wald_power_mu_n1,col='blue')
+lines(score_power_mu_n1,col='green')
+
+plot(likehood_power_mu_n2,col="red",type='l')
+lines(wald_power_mu_n2,col='blue')
+lines(score_power_mu_n2,col='green')
+
+plot(likehood_power_mu_n3,col="red",type='l')
+lines(wald_power_mu_n3,col='blue')
+lines(score_power_mu_n3,col='green')
+
+plot(likehood_power_mu_var1,col="red",type='l')
+lines(wald_power_mu_var1,col='blue')
+lines(score_power_mu_var1,col='green')
+
+plot(likehood_power_mu_var2,col="red",type='l')
+lines(wald_power_mu_var2,col='blue')
+lines(score_power_mu_var2,col='green')
+
+plot(likehood_power_mu_var3,col="red",type='l')
+lines(wald_power_mu_var3,col='blue')
+lines(score_power_mu_var3,col='green')
+```
+
+```{r}
+par(mfrow=c(2,3))
+#當N(1,theta)
+
+plot(likehood_power_var_n1,col="red",type='l')
+lines(wald_power_var_n1,col='blue')
+lines(score_power_var_n1,col='green')
+
+plot(likehood_power_var_n2,col="red",type='l')
+lines(wald_power_var_n2,col='blue')
+lines(score_power_var_n2,col='green')
+
+plot(likehood_power_var_n3,col="red",type='l')
+lines(wald_power_var_n3,col='blue')
+lines(score_power_var_n3,col='green')
+
+plot(likehood_power_var_mean1,col="red",type='l')
+lines(wald_power_var_mean1,col='blue')
+lines(score_power_var_mean1,col='green')
+
+plot(likehood_power_var_mean2,col="red",type='l')
+lines(wald_power_var_mean2,col='blue')
+lines(score_power_var_mean2,col='green')
+
+
+plot(likehood_power_var_mean3,col="red",type='l')
+lines(wald_power_var_mean3,col='blue')
+lines(score_power_var_mean3,col='green')
+```
+
+```{r}
+par(mfrow=c(1,3))
+#當exp(rate)
+plot(likehood_power_rate_n1,col="red",type='l')
+lines(wald_power_rate_n1,col='blue')
+lines(score_power_rate_n1,col='green')
+
+plot(likehood_power_rate_n2,col="red",type='l')
+lines(wald_power_rate_n2,col='blue')
+lines(score_power_rate_n2,col='green')
+
+plot(likehood_power_rate_n3,col="red",type='l')
+lines(wald_power_rate_n3,col='blue')
+lines(score_power_rate_n3,col='green')
+
+
+```
+
+
+
+
+
+![製圖：by科](https://i.ibb.co/PWwTgvP/dog.png){width=85%,align=center}
