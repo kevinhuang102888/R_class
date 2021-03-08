@@ -1,0 +1,112 @@
+---
+title: "sample distribution"
+author: "Kevin"
+date: "2020/9/10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 抽樣分配(sample distribution)到底是什麼？
+
+我們來看看維基百科是怎麼說的？
+
+> In statistics, a sampling distribution or finite-sample distribution is the probability distribution of a given random-sample-based statistic. If an arbitrarily large number of samples, each involving multiple observations (data points), were separately used in order to compute one value of a statistic (such as, for example, the sample mean or sample variance) for each sample, then the sampling distribution is the probability distribution of the values that the statistic takes on. In many contexts, only one sample is observed, but the sampling distribution can be found theoretically.
+
+是不是看不懂呢? 
+讓我淺顯易懂地說明一下><
+
+>「抽樣」，簡單講就是透過分析部分資料的資訊，去獲取整個母體的資訊
+
+>「抽樣分配」，即使每次抽樣的個數都固定，仍每次得到的統計量也不一定一樣，存在著資料的隨機性，因此我們會感興趣多次抽樣結果後的資料分布。
+
+用實例來理解一下吧~
+
+>我們感興趣成大統計系同學的身高，想知道在統計系的人是不是都很高，但是統計系一個年級約為60人，有四個年級，可是有240個同學呢！
+
+我們不可能去調查每個人的身高，再求得平均身高，這樣太費工耗時，因此我們決定隨機找30人調查來調查就好。
+
+我們先來假設統計系全體同學的身高分配成常態分布，平均身高170cm，標準差為5cm
+```{r cars}
+set.seed(20200912)
+Population<-rnorm(240,mean =170,sd=5)
+hist(Population,breaks =15)
+```
+
+## 抽樣
+
+我們來看看隨意找到20個人的調查結果。
+
+```{r , echo=FALSE}
+set.seed(100000)
+samples<-sample(Population,20,replace = F)
+samples
+mean(samples)
+var(samples)
+```
+
+>看來我們的第一次抽樣得到的抽樣，得到的平均似乎離真正的平均有段距離。
+告訴我們每次抽樣不一定一樣，可能會得到平均比較高，或是比較低，也有可能差不多。
+
+
+多次抽樣(例如10000次)後，我們來看看每次抽20個人平均身高的分布。
+```{r }
+data1<-c()
+for (x in 1:10000){
+  samples<-sample(Population,20,replace = F)
+  x_bar<-mean(samples)
+  data1<-c(data1,x_bar)
+}
+mean(data1)
+var(data1)
+hist(data1)
+```
+
+
+>我們慢慢將抽樣的樣本數增加，會發現變異數越來小，從圖形可知，因為樣本數越多，得到的母體資訊會更多，也就是每次抽樣的結果也會變小。
+
+```{r pressure}
+data2<-c()
+for (x in 1:10000){
+  samples_2<-sample(Population,100,replace = F)
+  x_bar<-mean(samples_2)
+  data2<-c(data2,x_bar)
+}
+mean(data2)
+var(data2)
+hist(data2,xlim =c(166,172))
+
+data3<-c()
+for (x in 1:10000){
+  samples_3<-sample(Population,200,replace = F)
+  x_bar<-mean(samples_3)
+  data3<-c(data3,x_bar)
+}
+mean(data3)
+var(data3)
+hist(data3,xlim =c(166,172))
+```
+
+
+最後我們來瞭解，「母體分布」跟「樣本分布」有什麼關聯性！
+
+母體分布：$x \sim N(\mu,\sigma^2)$
+
+樣本分布：$\bar{x} \sim N(\mu,\sigma^2/n)$
+
+由此可知，樣本分布的變異數跟樣本數有關係，而且甚至呈$\sigma^2/n$
+
+我們拿剛剛抽20個人的身高之舉例來驗證。
+```{r }
+var(Population)/var(data1)
+```
+
+十分接近20這個數字。(因為是樣本變異數，所以有誤差)
+
+
+>相信大家，已經對於「抽樣分配」有了一些概念，雖然我們不知道母體分布狀況(說不定不是常態分布)，但當我們抽的樣本數越多，我們得到的分配會越接近常態分布，這個也是所謂的「中央極限定理」。
+
+
+
