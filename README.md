@@ -9,7 +9,7 @@
 
 ## 學習紀錄
 
->> 程式設計
+> 程式設計
 
 期末考考題：[這是啥?](https://kevinhuang102888.github.io/R_class_2019/FinalExam.pdf)
 
@@ -17,8 +17,11 @@
 
 R語言的自我學習紀錄：[點這裡](https://kevinhuang102888.github.io/R_class_2019/R_review.html)
 
->> 統計模擬
+> 統計模擬
 
-什麼是抽樣分配？：[點這裡](https://kevinhuang102888.github.io/R_class_2019/R_review.html)
+什麼是抽樣分配？：[點這裡](https://htmlpreview.github.io/?https://github.com/kevinhuang102888/R_class_2019/blob/master/R_review.html)
 
-期末報告：[統計常見三種test PK]()
+期末報告：
+在統計方法上，最常見的三種檢定方法:Likehood Ratio Test、Wald Test跟Score Test，三者之間到底有什麼差異呢？
+
+[想了解](https://htmlpreview.github.io/?https://github.com/kevinhuang102888/R_class_2019/blob/master/stat_simu/stat_simu_final.html)
