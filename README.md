@@ -13,11 +13,11 @@
 
 > 程式設計
 
-期末考考題：[這是啥?](https://kevinhuang102888.github.io/R_class_2019/FinalExam.pdf)
+期末考考題：[這是啥?](https://kevinhuang102888.github.io/R_class/FinalExam.pdf)
 
-期末考答案：[我的解答在這](https://kevinhuang102888.github.io/R_class_2019/final_exam.html)
+期末考答案：[我的解答在這](https://kevinhuang102888.github.io/R_class/final_exam.html)
 
-R語言的自我學習紀錄：[點這裡](https://kevinhuang102888.github.io/R_class_2019/R_review.html)
+R語言的自我學習紀錄：[點這裡](https://kevinhuang102888.github.io/R_class/R_review.html)
 
 > 統計模擬
 
